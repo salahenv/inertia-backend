@@ -7,11 +7,13 @@ const cookieParser = require('cookie-parser');
 
 const dbURI = process.env.DATABASE_URL;
 const port = process.env.PORT;
-const mongoPassword = encodeURIComponent('KaneSuger@2030Mongo');
-const mongoUserName = encodeURIComponent('salahenv');
+
+const mongoPassword = encodeURIComponent(process.env.DB_PASSWORD);
+const mongoUserName = encodeURIComponent(process.env.DB_USERNAME);
+
 const app = express();
 
-const uri = `mongodb+srv://${mongoUserName}:${mongoPassword}@cluster0.nvvwn.mongodb.net/inertia?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = dbURI.replace('mongoUserName', mongoUserName).replace('mongoPassword', mongoPassword);
 const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
 
 async function connectToDb() {
