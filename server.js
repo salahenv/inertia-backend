@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const jwt = require("jsonwebtoken");
 
 const dbURI = process.env.DATABASE_URL;
 const port = process.env.PORT;
@@ -21,6 +22,29 @@ async function connectToDb() {
   }
 }
 
+const validateToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, 'yourSecretKey', (err, payload) => {
+      if (err) {
+        return res.status(403).json({
+          success: false,
+          message: 'Invalid token',
+        });
+      } else {
+        req.user = payload;
+        next();
+      }
+    });
+  } else {
+    res.status(401).json({
+      success: false,
+      message: 'Token is not provided',
+    });
+  }
+};
+
 var allowedOrigins = ['http://localhost:3000'];
 app.use(cors({
   origin: function(origin, callback){
@@ -39,6 +63,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.use('/auth', require('./routes/auth'));
+app.use('/', validateToken, (req, res) => {
+  res.json({
+    success: true,
+    message: 'Welcome to the protected route!',
+    user: req.user,
+  });
+})
 
 async function startServer () {
     try {
