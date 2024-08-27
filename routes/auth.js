@@ -45,9 +45,9 @@ router.post("/login", async (req, res) => {
         // Set token in a cookie
         res.cookie('token', token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production', // Send cookie only over HTTPS if in production
-          maxAge: 3600000, // 1 hour (in milliseconds)
-          sameSite: 'lax', // Prevents CSRF attacks
+          secure: process.env.NODE_ENV === 'prod', // Send only over HTTPS
+          maxAge: 3600000 * 24 * 30, // 30 days (in milliseconds)
+          sameSite: process.env.NODE_ENV === 'prod' ? 'none' : 'lax', // Prevents CSRF attacks
         });
         return res.status(200).send({
           success: true,
