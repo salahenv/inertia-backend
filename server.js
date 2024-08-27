@@ -55,21 +55,17 @@ app.use(cors({
       return callback(new Error(msg), false);
     }
     return callback(null, true);
-    }
-  })
+    },
+    credentials: true
+  }),
+  
 );
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.use('/auth', require('./routes/auth'));
-app.use('/', validateToken, (req, res) => {
-  res.json({
-    success: true,
-    message: 'Welcome to the protected route!',
-    user: req.user,
-  });
-})
+app.use('/focus', validateToken, require('./routes/focus'));
 
 async function startServer () {
     try {
