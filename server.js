@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require("jsonwebtoken");
+const cookieParser = require('cookie-parser');
 
 const dbURI = process.env.DATABASE_URL;
 const port = process.env.PORT;
@@ -23,20 +24,24 @@ async function connectToDb() {
 }
 
 const validateToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader) {
-    const token = authHeader.split(' ')[1];
-    jwt.verify(token, 'yourSecretKey', (err, payload) => {
-      if (err) {
-        return res.status(403).json({
-          success: false,
-          message: 'Invalid token',
-        });
-      } else {
-        req.user = payload;
-        next();
-      }
-    });
+  const cookies = req.cookies;
+  const token = cookies.token;
+  if (token) {
+    try {
+      jwt.verify(token, 'yourSecretKey', (err, payload) => {
+        if (err) {
+          return res.status(403).json({
+            success: false,
+            message: 'Invalid token',
+          });
+        } else {
+          req.user = payload;
+          next();
+        }
+      });
+    } catch (error) {
+    }
+    
   } else {
     res.status(401).json({
       success: false,
@@ -45,7 +50,8 @@ const validateToken = (req, res, next) => {
   }
 };
 
-var allowedOrigins = ['http://localhost:3000'];
+app.use(cookieParser());
+const allowedOrigins = ['http://localhost:3000'];
 app.use(cors({
   origin: function(origin, callback){
     if(!origin) return callback(null, true);
@@ -60,7 +66,6 @@ app.use(cors({
   }),
   
 );
-
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
@@ -74,7 +79,7 @@ async function startServer () {
             console.log(`Server running on http://localhost:${port}`);
         });
     } catch (error) {
-        console.log('error', error);
+        console.log('error white start server', error);
     }
 }
 startServer();

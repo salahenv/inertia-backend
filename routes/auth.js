@@ -24,7 +24,6 @@ router.post("/register", async (req, res) => {
     await user.save();
     res.status(201).send({success: true, message: 'user created', data: {}});
   } catch (err) {
-    console.error(err);
     res.status(500).send({success: false, message: 'something went wrong. Please try later', error: 'server error'});
   }
 });

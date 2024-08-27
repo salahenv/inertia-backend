@@ -5,17 +5,17 @@ const Focus = require("../models/focus");
 
 
 router.get("/", async (req, res) => {
+  const user = req.user;
   try {
-    let user = await Focus.find({ userId: ObjectId("userObjectIdHere") });
-    if (user) {
-      return res.status(400).send("User already exists");
+    let focus = await Focus.find({ userId: new mongoose.Types.ObjectId(user.id)});
+    if(focus.length) {
+      return res.status(200).send({success: true, message: '', data: {
+        focus
+      }});
     }
-    user = new User({ name, username, password });
-    await user.save();
-    res.status(201).send({success: true, message: 'user created', data: {}});
+    return res.status(200).send({success: true, message: 'no focus found', data: {focus:[]}});
   } catch (err) {
-    console.error(err);
-    res.status(500).send({success: false, message: 'something went wrong. Please try later', error: 'server error'});
+    return res.status(500).send({success: false, message: 'something went wrong. Please try later', error: 'server error'});
   }
 });
 
@@ -31,7 +31,42 @@ router.post("/create", async (req, res) => {
         data: {focus}
     });
   } catch (error) {
-    console.log(error);
+    return res.status(500).send({
+        success: false,
+        message: 'something went wrong',
+        error: {error}
+    });
+  }
+});
+
+router.patch("/update/:focusId", async (req, res) => {
+  const { focusId } = req.params;
+  const updatedFocus = req.body;
+  try {
+      const focus = await Focus.findByIdAndUpdate(
+        new mongoose.Types.ObjectId(focusId), 
+        updatedFocus,
+        { new: true, runValidators: true}
+      );
+      if (!focus) {
+        return res.status(404).json(
+          { success: false, 
+            message: 'Focus not found' 
+          }
+        );
+      }
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Focus updated',
+        data: {focus}
+      });
+    
+  } catch (error) {
+    return res.status(500).send({
+        success: false,
+        message: 'something went wrong',
+        error
+    });
   }
 });
 
