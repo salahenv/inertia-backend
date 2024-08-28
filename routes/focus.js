@@ -7,7 +7,15 @@ const Focus = require("../models/focus");
 router.get("/", async (req, res) => {
   const user = req.user;
   try {
-    let focus = await Focus.find({ userId: new mongoose.Types.ObjectId(user.id)});
+    const sd = new Date().setUTCHours(0, 0, 0, 0);
+    const ed = new Date().setUTCHours(23, 59, 59, 999);
+    let focus = await Focus.find({ 
+      userId: new mongoose.Types.ObjectId(user.id),
+      createdAt: {
+        $gte: sd,
+        $lt: ed
+      }
+    });
     if(focus.length) {
       return res.status(200).send({success: true, message: '', data: {
         focus
@@ -15,7 +23,7 @@ router.get("/", async (req, res) => {
     }
     return res.status(200).send({success: true, message: 'no focus found', data: {focus:[]}});
   } catch (err) {
-    return res.status(500).send({success: false, message: 'something went wrong. Please try later', error: 'server error'});
+    return res.status(500).send({success: false, message: 'something went wrong. Please try later', error: err});
   }
 });
 
