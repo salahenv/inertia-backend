@@ -49,7 +49,7 @@ const validateToken = (req, res, next) => {
 };
 
 app.use(cookieParser());
-const allowedOrigins = ['http://localhost:3000', 'https://inertia-gamma.vercel.app'];
+const allowedOrigins = ['http://localhost:3000', 'https://inertia-gamma.vercel.app', 'https://api.salahenv.com'];
 app.use(cors({
   origin: function(origin, callback){
     if(!origin) return callback(null, true);
