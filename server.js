@@ -26,30 +26,26 @@ async function connectToDb() {
 }
 
 const validateToken = (req, res, next) => {
-  const cookies = req.cookies;
-  const token = cookies.token;
-  if (token) {
-    try {
-      jwt.verify(token, 'yourSecretKey', (err, payload) => {
-        if (err) {
-          return res.status(403).json({
-            success: false,
-            message: 'Invalid token',
-          });
-        } else {
-          req.user = payload;
-          next();
-        }
-      });
-    } catch (error) {
-    }
-    
-  } else {
-    res.status(401).json({
+  const { token } = req.cookies;
+
+  if (!token) {
+    return res.status(401).json({
       success: false,
       message: 'Token is not provided',
     });
   }
+
+  jwt.verify(token, process.env.JWT_SECRET_KEY || 'yourSecretKey', (err, payload) => {
+    if (err) {
+      return res.status(403).json({
+        success: false,
+        message: 'Invalid token',
+      });
+    }
+
+    req.user = payload;
+    next();
+  });
 };
 
 app.use(cookieParser());
