@@ -5,9 +5,9 @@ const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 
 const generateToken = (payload) => {
-  const secretKey = 'yourSecretKey';
+  const secretKey = process.env.JWT_SECRET_KEY || 'yourSecretKey';
   const options = {
-    expiresIn: '1h',
+    expiresIn: '24h',
   };
   const token = jwt.sign(payload, secretKey, options);
   return token;
