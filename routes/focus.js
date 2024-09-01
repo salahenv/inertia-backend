@@ -28,9 +28,9 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/create", async (req, res) => {
-  const { name, startTime, endTime } = req.body;
+  const { name, startTime, endTime, tag } = req.body;
   const user = req.user;
-  let focus = new Focus({ userId: new mongoose.Types.ObjectId(user.id), name, startTime, endTime });
+  let focus = new Focus({ userId: new mongoose.Types.ObjectId(user.id), name, startTime, endTime, tag });
   try {
     focus = await focus.save();
     return res.status(201).send({

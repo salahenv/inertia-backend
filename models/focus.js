@@ -17,6 +17,10 @@ const focusSchema = new mongoose.Schema({
     endTime: {
         type: Date,
         required: true
+    },
+    tag: {
+        type: String,
+        required: true
     }
 }, { timestamps: true });
   
