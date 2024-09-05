@@ -26,14 +26,18 @@ async function connectToDb() {
 }
 
 const validateToken = (req, res, next) => {
-  const { token } = req.cookies;
+  let { token } = req.cookies;
+  const authorization = req.headers.authorization;
+  
 
-  if (!token) {
+  if (!token && !authorization) {
     return res.status(401).json({
       success: false,
       message: 'Token is not provided',
     });
   }
+
+  token = token ? token : authorization.split(" ")[1];
 
   jwt.verify(token, process.env.JWT_SECRET_KEY || 'yourSecretKey', (err, payload) => {
     if (err) {

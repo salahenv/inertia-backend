@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require('mongoose');
 const router = express.Router();
 const Focus = require("../models/focus");
+const Area = require("../models/area");
 
 
 router.get("/", async (req, res) => {
@@ -78,4 +79,66 @@ router.patch("/update/:focusId", async (req, res) => {
   }
 });
 
+router.get("/area", async (req, res) => {
+  const user = req.user;
+  try {
+    let area = await Area.find({ 
+      userId: new mongoose.Types.ObjectId(user.id)
+    });
+    if(area.length) {
+      return res.status(200).send({success: true, message: '', data: {
+        area: area
+      }});
+    }
+    return res.status(200).send({success: true, message: 'no focus area found', data: {focusArea:[]}});
+  } catch (err) {
+    return res.status(500).send({success: false, message: 'something went wrong. Please try later', error: err});
+  }
+});
+
+router.post("/area/create", async (req, res) => {
+  const { label } = req.body;
+  const value = label.toUpperCase().split(" ").join("_");
+  const user = req.user;
+  let area = new Area({ userId: new mongoose.Types.ObjectId(user.id), label, value });
+  try {
+    area = await area.save();
+    return res.status(201).send({
+        success: true,
+        message: 'area created',
+        data: {area}
+    });
+  } catch (error) {
+    return res.status(500).send({
+        success: false,
+        message: 'something went wrong',
+        error: {error}
+    });
+  }
+});
+
+router.delete("/area/remove/:areaId", async (req, res) => {
+  const { areaId } = req.params;
+  try {
+    const area = await Area.findByIdAndDelete(new mongoose.Types.ObjectId(areaId));
+    if (!area) {
+      return res.status(404).json(
+        { success: false, 
+          message: 'Area not found' 
+        }
+      );
+    }
+    return res.status(200).json({ 
+      success: true, 
+      message: 'area deleted',
+      data: {area}
+    });
+  } catch (error) {
+    return res.status(500).send({
+        success: false,
+        message: 'something went wrong',
+        error: {error}
+    });
+  }
+});
 module.exports = router;
