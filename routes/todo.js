@@ -7,9 +7,22 @@ const Todo = require("../models/todo");
 router.get("/", async (req, res) => {
   const user = req.user;
   try {
+
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
     let todo = await Todo.find({ 
       userId: new mongoose.Types.ObjectId(user.id),
+      $or: [
+        { completed: false },
+        {
+          completed: true,
+          createdAt: { $gte: startOfDay, $lt: endOfDay }
+        }
+      ]
     });
+
     if(todo.length) {
       return res.status(200).send({success: true, message: '', data: {
         todo
@@ -70,6 +83,31 @@ router.patch("/update/:todoId", async (req, res) => {
         success: false,
         message: 'something went wrong',
         error
+    });
+  }
+});
+
+router.delete("/remove/:todoId", async (req, res) => {
+  const { todoId } = req.params;
+  try {
+    const todo = await Todo.findByIdAndDelete(new mongoose.Types.ObjectId(todoId));
+    if (!todo) {
+      return res.status(404).json(
+        { success: false, 
+          message: 'todo not found' 
+        }
+      );
+    }
+    return res.status(200).json({ 
+      success: true, 
+      message: 'todo deleted',
+      data: {todo}
+    });
+  } catch (error) {
+    return res.status(500).send({
+        success: false,
+        message: 'something went wrong',
+        error: {error}
     });
   }
 });
