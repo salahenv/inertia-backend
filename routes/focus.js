@@ -79,6 +79,31 @@ router.patch("/update/:focusId", async (req, res) => {
   }
 });
 
+router.delete("/remove/:focusId", async (req, res) => {
+  const { focusId } = req.params;
+  try {
+    const focus = await Focus.findByIdAndDelete(new mongoose.Types.ObjectId(focusId));
+    if (focus) {
+      return res.status(404).json(
+        { success: false, 
+          message: 'focus not found' 
+        }
+      );
+    }
+    return res.status(200).json({ 
+      success: true, 
+      message: 'area deleted',
+      data: {focus}
+    });
+  } catch (error) {
+    return res.status(500).send({
+        success: false,
+        message: 'something went wrong',
+        error: {error}
+    });
+  }
+});
+
 router.get("/area", async (req, res) => {
   const user = req.user;
   try {
