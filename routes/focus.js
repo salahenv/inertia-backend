@@ -83,7 +83,7 @@ router.delete("/remove/:focusId", async (req, res) => {
   const { focusId } = req.params;
   try {
     const focus = await Focus.findByIdAndDelete(new mongoose.Types.ObjectId(focusId));
-    if (focus) {
+    if (!focus) {
       return res.status(404).json(
         { success: false, 
           message: 'focus not found' 
