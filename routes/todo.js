@@ -34,6 +34,43 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/completed", async (req, res) => {
+  const user = req.user;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  try {
+    const startIndex = (page - 1) * limit;
+    let todo = await Todo.find({ 
+      userId: new mongoose.Types.ObjectId(user.id),
+      $or: [{ completed: true }],
+    })
+    .skip(startIndex)
+    .limit(limit);
+    
+    const totalTodos = await Todo.countDocuments({ 
+      userId: new mongoose.Types.ObjectId(user.id),
+      $or: [{ completed: true }]
+    });
+
+    if (todo.length) {
+      return res.status(200).send({
+        success: true, 
+        message: '', 
+        data: {
+          todos: todo,
+          currentPage: page,
+          totalPages: Math.ceil(totalTodos / limit),
+          totalTodos: totalTodos
+        }
+      });
+    }
+    return res.status(200).send({ success: true, message: 'no todo found', data: { todo: [] }});
+  } catch (err) {
+    return res.status(500).send({ success: false, message: 'something went wrong. Please try later', error: err });
+  }
+});
+
+
 router.post("/create", async (req, res) => {
   const { name, completed = false } = req.body;
   const user = req.user;
