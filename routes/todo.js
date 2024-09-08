@@ -24,8 +24,12 @@ router.get("/", async (req, res) => {
     });
 
     if(todo.length) {
+      const completedTodos = todo.filter((t) => t.completed);
+      const inCompletedTodos = todo.filter((t) => !t.completed);
       return res.status(200).send({success: true, message: '', data: {
-        todo
+        todo,
+        completedTodos,
+        inCompletedTodos
       }});
     }
     return res.status(200).send({success: true, message: 'no todo found', data: {todo:[]}});
