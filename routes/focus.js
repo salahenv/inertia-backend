@@ -7,26 +7,50 @@ const Area = require("../models/area");
 
 router.get("/", async (req, res) => {
   const user = req.user;
+  const dayOffset = parseInt(req.query.dayOffset) || 0; // dayOffset: 0 for today, 1 for yesterday, etc.
+
   try {
-    const sd = new Date().setUTCHours(0, 0, 0, 0);
-    const ed = new Date().setUTCHours(23, 59, 59, 999);
+    // Get the current date and set time to 00:00:00 for start of the day
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - dayOffset);
+    startDate.setHours(0, 0, 0, 0);
+
+    // End of the day: 23:59:59.999
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - dayOffset);
+    endDate.setHours(23, 59, 59, 999);
+
+    // Fetch focus data within the time range
     let focus = await Focus.find({ 
       userId: new mongoose.Types.ObjectId(user.id),
       createdAt: {
-        $gte: sd,
-        $lt: ed
+        $gte: startDate,
+        $lt: endDate
       }
     });
-    if(focus.length) {
-      return res.status(200).send({success: true, message: '', data: {
-        focus
-      }});
+
+    if (focus.length) {
+      return res.status(200).send({
+        success: true, 
+        message: '', 
+        data: { focus }
+      });
     }
-    return res.status(200).send({success: true, message: 'no focus found', data: {focus:[]}});
+
+    return res.status(200).send({
+      success: true, 
+      message: 'No focus found', 
+      data: { focus: [] }
+    });
   } catch (err) {
-    return res.status(500).send({success: false, message: 'something went wrong. Please try later', error: err});
+    return res.status(500).send({
+      success: false, 
+      message: 'Something went wrong. Please try later', 
+      error: err
+    });
   }
 });
+
 
 router.post("/create", async (req, res) => {
   const { name, startTime, endTime, tag } = req.body;
