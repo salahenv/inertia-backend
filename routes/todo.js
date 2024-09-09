@@ -48,6 +48,7 @@ router.get("/completed", async (req, res) => {
       userId: new mongoose.Types.ObjectId(user.id),
       $or: [{ completed: true }],
     })
+    .sort({_id: -1})
     .skip(startIndex)
     .limit(limit);
     
