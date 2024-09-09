@@ -13,12 +13,12 @@ router.get("/", async (req, res) => {
     // Get the current date and set time to 00:00:00 for start of the day
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - dayOffset);
-    startDate.setHours(0, 0, 0, 0);
+    startDate.setUTCHours(0, 0, 0, 0);
 
     // End of the day: 23:59:59.999
     const endDate = new Date();
     endDate.setDate(endDate.getDate() - dayOffset);
-    endDate.setHours(23, 59, 59, 999);
+    endDate.setUTCHours(23, 59, 59, 999);
 
     // Fetch focus data within the time range
     let focus = await Focus.find({ 
