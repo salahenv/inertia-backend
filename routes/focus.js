@@ -10,17 +10,14 @@ router.get("/", async (req, res) => {
   const dayOffset = parseInt(req.query.dayOffset) || 0; // dayOffset: 0 for today, 1 for yesterday, etc.
 
   try {
-    // Get the current date and set time to 00:00:00 for start of the day
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - dayOffset);
-    startDate.setUTCHours(0, 0, 0, 0);
+    startDate.setHours(5, 30, 0, 0); // Set to the start of the day in IST
 
-    // End of the day: 23:59:59.999
     const endDate = new Date();
     endDate.setDate(endDate.getDate() - dayOffset);
-    endDate.setUTCHours(23, 59, 59, 999);
+    endDate.setHours(29, 29, 59, 999);
 
-    // Fetch focus data within the time range
     let focus = await Focus.find({ 
       userId: new mongoose.Types.ObjectId(user.id),
       createdAt: {
@@ -33,16 +30,17 @@ router.get("/", async (req, res) => {
       return res.status(200).send({
         success: true, 
         message: '', 
-        data: { focus }
+        data: { focus, date: startDate }
       });
     }
 
     return res.status(200).send({
       success: true, 
       message: 'No focus found', 
-      data: { focus: [] }
+      data: { focus: [], date: startDate }
     });
   } catch (err) {
+    console.log(err);
     return res.status(500).send({
       success: false, 
       message: 'Something went wrong. Please try later', 
