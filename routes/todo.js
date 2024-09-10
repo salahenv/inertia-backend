@@ -58,9 +58,8 @@ router.get("/completed", async (req, res) => {
     startDate.setUTCDate(startDate.getUTCDate() - dayOffset);
     startDate.setUTCHours(0, 0, 0, 0);
 
-    const endDate = new Date();
-    endDate.setUTCDate(endDate.getUTCDate() - dayOffset);
-    endDate.setUTCHours(23, 59, 59, 999);
+    const endDate = new Date(startDate);
+    endDate.setUTCDate(startDate.getUTCDate() + 1);
 
     let todo = await Todo.find({
       userId: new mongoose.Types.ObjectId(user.id),
