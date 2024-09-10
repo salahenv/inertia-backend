@@ -11,12 +11,12 @@ router.get("/", async (req, res) => {
   try {
     // Calculate the start date
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - dayOffset);
+    startDate.setDate(startDate.getDate() - dayOffset + 1);
     startDate.setHours(0, 0, 0, 0); // 12:00 AM of the start day
 
   // Calculate the end date
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() - dayOffset);
+    endDate.setDate(endDate.getDate() - dayOffset + 1);
     endDate.setHours(23, 59, 59, 999); // Last millisecond of the end day
 
     console.log('Start Date:', startDate.toISOString());
