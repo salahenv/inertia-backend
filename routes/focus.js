@@ -9,16 +9,18 @@ router.get("/", async (req, res) => {
   const dayOffset = parseInt(req.query.dayOffset) || 0; // dayOffset: 0 for today, 1 for yesterday, etc.
 
   try {
+    // Calculate the start date
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - dayOffset);
-    startDate.setHours(5, 30, 0, 0); // Set to the start of the day in IST
+    startDate.setHours(0, 0, 0, 0); // 12:00 AM of the start day
 
+  // Calculate the end date
     const endDate = new Date();
     endDate.setDate(endDate.getDate() - dayOffset);
-    endDate.setHours(29, 29, 59, 999);
+    endDate.setHours(23, 59, 59, 999); // Last millisecond of the end day
 
-    console.log(new Date(startDate), new Date(endDate));
-
+    console.log('Start Date:', startDate.toISOString());
+    console.log('End Date:', endDate.toISOString());
     let focus = await Focus.find({
       userId: new mongoose.Types.ObjectId(user.id),
       createdAt: {
