@@ -7,11 +7,11 @@ router.get("/", async (req, res) => {
   const user = req.user;
   try {
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() + 1);
+    startDate.setDate(startDate.getDate());
     startDate.setHours(0, 0, 0, 0);
 
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + 1);
+    endDate.setDate(endDate.getDate());
     endDate.setHours(23, 59, 59, 999);
 
     let todo = await Todo.find({
@@ -58,11 +58,11 @@ router.get("/completed", async (req, res) => {
   try {
 
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - dayOffset + 1);
+    startDate.setDate(startDate.getDate() - dayOffset);
     startDate.setHours(0, 0, 0, 0);
 
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() - dayOffset + 1);
+    endDate.setDate(endDate.getDate() - dayOffset);
     endDate.setHours(23, 59, 59, 999);
 
     let todos = await Todo.find({
