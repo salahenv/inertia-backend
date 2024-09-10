@@ -54,56 +54,49 @@ router.get("/completed", async (req, res) => {
   const user = req.user;
   const dayOffset = parseInt(req.query.dayOffset) || 1;
   try {
+    // Calculate startDate and endDate in UTC
     const startDate = new Date();
     startDate.setUTCDate(startDate.getUTCDate() - dayOffset);
-    startDate.setUTCHours(0, 0, 0, 0);
+    startDate.setUTCHours(0, 0, 0, 0); // Start of the previous day in UTC
 
     const endDate = new Date(startDate);
-    endDate.setUTCDate(startDate.getUTCDate() + 1);
-    endDate.setUTCHours(0, 0, 0, 0);
+    endDate.setUTCDate(startDate.getUTCDate() + 1); // Start of the current day in UTC
+    endDate.setUTCHours(0, 0, 0, 0); // Start of the current day in UTC
 
-    console.log('Start Date:', startDate);
-    console.log('End Date:', endDate);
+    // Log for debugging
+    console.log('Start Date (UTC):', startDate.toISOString());
+    console.log('End Date (UTC):', endDate.toISOString());
 
-    let todo = await Todo.find({
+    let todos = await Todo.find({
       userId: new mongoose.Types.ObjectId(user.id),
-      $and: [
-        { completed: true },
-        {
-          updatedAt: {
-            $gte: startDate,
-            $lt: endDate,
-          },
-        },
-      ],
+      completed: true,
+      updatedAt: {
+        $gte: startDate,
+        $lt: endDate,
+      },
+    }).exec();
+
+    // Log the results
+    console.log('Queried Todos:', todos);
+
+    return res.status(200).send({
+      success: true,
+      message: todos.length ? "" : "No todos found",
+      data: {
+        todos: todos,
+        date: startDate,
+      },
     });
-    if (todo.length) {
-      return res.status(200).send({
-        success: true,
-        message: "",
-        data: {
-          todos: todo,
-          date: startDate,
-        },
-      });
-    }
-    return res
-      .status(200)
-      .send({
-        success: true,
-        message: "no todo found",
-        data: { todo: [], date: startDate },
-      });
+
   } catch (err) {
-    return res
-      .status(500)
-      .send({
-        success: false,
-        message: "something went wrong. Please try later",
-        error: err,
-      });
+    return res.status(500).send({
+      success: false,
+      message: "Something went wrong. Please try again later",
+      error: err,
+    });
   }
 });
+
 
 router.post("/create", async (req, res) => {
   const { name, completed = false } = req.body;
