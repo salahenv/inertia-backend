@@ -7,10 +7,12 @@ router.get("/", async (req, res) => {
   const user = req.user;
   try {
     const startDate = new Date();
-    startDate.setUTCHours(0, 0, 0, 0);
+    startDate.setDate(startDate.getDate() + 1);
+    startDate.setHours(0, 0, 0, 0);
 
     const endDate = new Date();
-    endDate.setUTCHours(23, 59, 59, 999);
+    endDate.setDate(endDate.getDate() + 1);
+    endDate.setHours(23, 59, 59, 999);
 
     let todo = await Todo.find({
       userId: new mongoose.Types.ObjectId(user.id),
@@ -54,18 +56,14 @@ router.get("/completed", async (req, res) => {
   const user = req.user;
   const dayOffset = parseInt(req.query.dayOffset) || 1;
   try {
-    // Calculate startDate and endDate in UTC
+
     const startDate = new Date();
-    startDate.setUTCDate(startDate.getUTCDate() - dayOffset);
-    startDate.setUTCHours(0, 0, 0, 0); // Start of the previous day in UTC
+    startDate.setDate(startDate.getDate() - dayOffset + 1);
+    startDate.setHours(0, 0, 0, 0);
 
-    const endDate = new Date(startDate);
-    endDate.setUTCDate(startDate.getUTCDate() + 1); // Start of the current day in UTC
-    endDate.setUTCHours(0, 0, 0, 0); // Start of the current day in UTC
-
-    // Log for debugging
-    console.log('Start Date (UTC):', startDate.toISOString());
-    console.log('End Date (UTC):', endDate.toISOString());
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - dayOffset + 1);
+    endDate.setHours(23, 59, 59, 999);
 
     let todos = await Todo.find({
       userId: new mongoose.Types.ObjectId(user.id),
@@ -75,9 +73,6 @@ router.get("/completed", async (req, res) => {
         $lt: endDate,
       },
     }).exec();
-
-    // Log the results
-    console.log('Queried Todos:', todos);
 
     return res.status(200).send({
       success: true,

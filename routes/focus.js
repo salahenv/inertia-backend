@@ -6,21 +6,17 @@ const Area = require("../models/area");
 
 router.get("/", async (req, res) => {
   const user = req.user;
-  const dayOffset = parseInt(req.query.dayOffset) || 0; // dayOffset: 0 for today, 1 for yesterday, etc.
+  const dayOffset = parseInt(req.query.dayOffset) || 0;
 
   try {
-    // Calculate the start date
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - dayOffset + 1);
-    startDate.setHours(0, 0, 0, 0); // 12:00 AM of the start day
+    startDate.setHours(0, 0, 0, 0);
 
-  // Calculate the end date
     const endDate = new Date();
     endDate.setDate(endDate.getDate() - dayOffset + 1);
-    endDate.setHours(23, 59, 59, 999); // Last millisecond of the end day
-
-    console.log('Start Date:', startDate.toISOString());
-    console.log('End Date:', endDate.toISOString());
+    endDate.setHours(23, 59, 59, 999);
+    
     let focus = await Focus.find({
       userId: new mongoose.Types.ObjectId(user.id),
       createdAt: {
