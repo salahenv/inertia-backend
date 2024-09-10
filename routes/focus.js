@@ -17,6 +17,8 @@ router.get("/", async (req, res) => {
     endDate.setDate(endDate.getDate() - dayOffset);
     endDate.setHours(29, 29, 59, 999);
 
+    console.log(new Date(startDate), new Date(endDate));
+
     let focus = await Focus.find({
       userId: new mongoose.Types.ObjectId(user.id),
       createdAt: {
