@@ -7,10 +7,13 @@ const Todo = require("../models/todo");
 router.get("/", async (req, res) => {
   const user = req.user;
   try {
-
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate());
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate());
+    endDate.setHours(23, 59, 59, 999);
 
     let todo = await Todo.find({ 
       userId: new mongoose.Types.ObjectId(user.id),
@@ -18,7 +21,7 @@ router.get("/", async (req, res) => {
         { completed: false },
         {
           completed: true,
-          createdAt: { $gte: startOfDay, $lt: endOfDay }
+          createdAt: { $gte: startDate, $lt: endDate }
         }
       ]
     });
@@ -40,36 +43,35 @@ router.get("/", async (req, res) => {
 
 router.get("/completed", async (req, res) => {
   const user = req.user;
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
+  const dayOffset = parseInt(req.query.dayOffset) || 1;
   try {
-    const startIndex = (page - 1) * limit;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - dayOffset);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - dayOffset);
+    endDate.setHours(23, 59, 59, 999);
     let todo = await Todo.find({ 
       userId: new mongoose.Types.ObjectId(user.id),
-      $or: [{ completed: true }],
-    })
-    .sort({_id: -1})
-    .skip(startIndex)
-    .limit(limit);
-    
-    const totalTodos = await Todo.countDocuments({ 
-      userId: new mongoose.Types.ObjectId(user.id),
-      $or: [{ completed: true }]
+      $and: [
+        { completed: true },
+        { updatedAt: {
+          $gte: startDate,
+          $lt: endDate
+        }}
+      ],
     });
-
     if (todo.length) {
       return res.status(200).send({
         success: true, 
         message: '', 
         data: {
           todos: todo,
-          currentPage: page,
-          totalPages: Math.ceil(totalTodos / limit),
-          totalTodos: totalTodos
+          date: startDate
         }
       });
     }
-    return res.status(200).send({ success: true, message: 'no todo found', data: { todo: [] }});
+    return res.status(200).send({ success: true, message: 'no todo found', data: { todo: [],  date: startDate }});
   } catch (err) {
     return res.status(500).send({ success: false, message: 'something went wrong. Please try later', error: err });
   }
