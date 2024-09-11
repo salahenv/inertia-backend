@@ -22,6 +22,12 @@ router.get("/", async (req, res) => {
     const endDate = new Date(startDate);
     endDate.setHours(23, 59, 59, 999); // End of the local day in UTC
 
+    // Log the important dates to see how they behave on the server
+    console.log("Current Date:", currentDate);
+    console.log("Timezone Offset (minutes):", timezoneOffset / 60000);
+    console.log("Start Date (UTC):", startDate);
+    console.log("End Date (UTC):", endDate);
+
     // Find records using the local adjusted UTC start and end dates
     let focus = await Focus.find({
       userId: new mongoose.Types.ObjectId(user.id),
@@ -52,6 +58,7 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
 
 
 
