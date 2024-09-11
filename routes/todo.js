@@ -57,12 +57,19 @@ router.get("/completed", async (req, res) => {
   const dayOffset = parseInt(req.query.dayOffset) || 1;
   try {
 
-    const startDate = new Date();
+    // const startDate = new Date();
+    // startDate.setDate(startDate.getDate() - dayOffset);
+    // startDate.setHours(0, 0, 0, 0);
+
+    // const endDate = new Date();
+    // endDate.setDate(endDate.getDate() - dayOffset);
+    // endDate.setHours(23, 59, 59, 999);
+    
+    const currentDate = new Date();
+    const startDate = new Date(currentDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
     startDate.setDate(startDate.getDate() - dayOffset);
     startDate.setHours(0, 0, 0, 0);
-
-    const endDate = new Date();
-    endDate.setDate(endDate.getDate() - dayOffset);
+    const endDate = new Date(startDate);
     endDate.setHours(23, 59, 59, 999);
 
     let todos = await Todo.find({
