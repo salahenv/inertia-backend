@@ -7,7 +7,7 @@ router.get("/", async (req, res) => {
   const user = req.user;
   try {
     const currentDate = new Date();
-    const startDate = new Date(currentDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const startDate = new Date(currentDate.toLocaleString('en-US', { timeZone: 'UTC' }));
     startDate.setDate(startDate.getDate());
     startDate.setHours(0, 0, 0, 0);
     const endDate = new Date(startDate);
@@ -56,7 +56,7 @@ router.get("/completed", async (req, res) => {
   const dayOffset = parseInt(req.query.dayOffset) || 1;
   try {
     const currentDate = new Date();
-    const startDate = new Date(currentDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const startDate = new Date(currentDate.toLocaleString('en-US', { timeZone: 'UTC' }));
     startDate.setDate(startDate.getDate() - dayOffset);
     startDate.setHours(0, 0, 0, 0);
     const endDate = new Date(startDate);
