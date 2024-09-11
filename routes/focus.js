@@ -11,24 +11,26 @@ router.get("/", async (req, res) => {
   try {
     const currentDate = new Date();
     
-    // Calculate the local timezone offset (in minutes) and adjust for it
-    const timezoneOffset = currentDate.getTimezoneOffset() * 60000; // offset in milliseconds
+    // Offset for IST (UTC+5:30) in milliseconds
+    const ISTOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in milliseconds
 
-    // Adjust the startDate and endDate to be in local time but converted to UTC
-    const startDate = new Date(currentDate.getTime() - timezoneOffset); // Convert to UTC
-    startDate.setDate(startDate.getDate() - dayOffset); // Adjust for the dayOffset
-    startDate.setHours(0, 0, 0, 0); // Start of the local day in UTC
+    // Adjust the current date to the IST timezone
+    const localCurrentDate = new Date(currentDate.getTime() + ISTOffset);
+    
+    // Set startDate and endDate to local (IST) time
+    const startDate = new Date(localCurrentDate);
+    startDate.setDate(startDate.getDate() - dayOffset);
+    startDate.setHours(0, 0, 0, 0); // Start of the day in local (IST) time
 
     const endDate = new Date(startDate);
-    endDate.setHours(23, 59, 59, 999); // End of the local day in UTC
+    endDate.setHours(23, 59, 59, 999); // End of the day in local (IST) time
 
-    // Log the important dates to see how they behave on the server
-    console.log("Current Date:", currentDate);
-    console.log("Timezone Offset (minutes):", timezoneOffset / 60000);
-    console.log("Start Date (UTC):", startDate);
-    console.log("End Date (UTC):", endDate);
+    console.log("Current Date (UTC):", currentDate);
+    console.log("Local Current Date (IST):", localCurrentDate);
+    console.log("Start Date (IST):", startDate);
+    console.log("End Date (IST):", endDate);
 
-    // Find records using the local adjusted UTC start and end dates
+    // Find records using the local (IST) adjusted start and end dates
     let focus = await Focus.find({
       userId: new mongoose.Types.ObjectId(user.id),
       createdAt: {
@@ -58,6 +60,7 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
 
 
 
