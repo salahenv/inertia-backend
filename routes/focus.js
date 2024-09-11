@@ -10,27 +10,14 @@ router.get("/", async (req, res) => {
 
   try {
     const currentDate = new Date();
-    
-    // Offset for IST (UTC+5:30) in milliseconds
-    const ISTOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in milliseconds
-
-    // Adjust the current date to the IST timezone
+    const ISTOffset = 5.5 * 60 * 60 * 1000;
     const localCurrentDate = new Date(currentDate.getTime() + ISTOffset);
-    
-    // Set startDate and endDate to local (IST) time
     const startDate = new Date(localCurrentDate);
     startDate.setDate(startDate.getDate() - dayOffset);
-    startDate.setHours(0, 0, 0, 0); // Start of the day in local (IST) time
-
+    startDate.setHours(0, 0, 0, 0);
     const endDate = new Date(startDate);
-    endDate.setHours(23, 59, 59, 999); // End of the day in local (IST) time
+    endDate.setHours(23, 59, 59, 999);
 
-    console.log("Current Date (UTC):", currentDate);
-    console.log("Local Current Date (IST):", localCurrentDate);
-    console.log("Start Date (IST):", startDate);
-    console.log("End Date (IST):", endDate);
-
-    // Find records using the local (IST) adjusted start and end dates
     let focus = await Focus.find({
       userId: new mongoose.Types.ObjectId(user.id),
       createdAt: {
