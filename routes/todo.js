@@ -12,8 +12,10 @@ router.get("/", async (req, res) => {
     const startDate = new Date(localCurrentDate);
     startDate.setDate(startDate.getDate());
     startDate.setHours(0, 0, 0, 0);
+    const startDateUTC = new Date(startDate.getTime() - ISTOffset);
     const endDate = new Date(startDate);
     endDate.setHours(23, 59, 59, 999);
+    const endDateUTC = new Date(endDate.getTime() - ISTOffset);
 
     let todo = await Todo.find({
       userId: new mongoose.Types.ObjectId(user.id),
@@ -21,7 +23,7 @@ router.get("/", async (req, res) => {
         { completed: false },
         {
           completed: true,
-          createdAt: { $gte: startDate, $lt: endDate },
+          createdAt: { $gte: startDateUTC, $lt: endDateUTC },
         },
       ],
     });
@@ -63,15 +65,17 @@ router.get("/completed", async (req, res) => {
     const startDate = new Date(localCurrentDate);
     startDate.setDate(startDate.getDate() - dayOffset);
     startDate.setHours(0, 0, 0, 0);
+    const startDateUTC = new Date(startDate.getTime() - ISTOffset);
     const endDate = new Date(startDate);
     endDate.setHours(23, 59, 59, 999);
+    const endDateUTC = new Date(endDate.getTime() - ISTOffset);
 
     let todos = await Todo.find({
       userId: new mongoose.Types.ObjectId(user.id),
       completed: true,
       updatedAt: {
-        $gte: startDate,
-        $lt: endDate,
+        $gte: startDateUTC,
+        $lt: endDateUTC
       },
     }).exec();
 
