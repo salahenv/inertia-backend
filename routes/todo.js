@@ -23,7 +23,7 @@ router.get("/", async (req, res) => {
         { completed: false },
         {
           completed: true,
-          createdAt: { $gte: startDateUTC, $lt: endDateUTC },
+          updatedAt: { $gte: startDateUTC, $lt: endDateUTC },
         },
       ],
     });
