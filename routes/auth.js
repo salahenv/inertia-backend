@@ -48,6 +48,7 @@ router.post("/login", async (req, res) => {
           secure: process.env.NODE_ENV === 'production', // Send only over HTTPS in production
           maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days (in milliseconds)
           sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Prevents CSRF attacks
+          path: '/'
         });
         return res.status(200).send({
           success: true,
