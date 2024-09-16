@@ -14,6 +14,9 @@ const todoSchema = new mongoose.Schema({
         type: Boolean,
         required: true
     },
+    archived: {
+        type: Boolean,
+    },
 }, { timestamps: true });
   
  module.exports = mongoose.model('TODO', todoSchema);

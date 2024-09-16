@@ -26,18 +26,15 @@ router.get("/", async (req, res) => {
           updatedAt: { $gte: startDateUTC, $lt: endDateUTC },
         },
       ],
+      archived: { $ne: true },
     });
 
     if (todo.length) {
-      const completedTodos = todo.filter((t) => t.completed);
-      const inCompletedTodos = todo.filter((t) => !t.completed);
       return res.status(200).send({
         success: true,
         message: "",
         data: {
-          todo,
-          completedTodos,
-          inCompletedTodos,
+          todo
         },
       });
     }
@@ -97,6 +94,31 @@ router.get("/completed", async (req, res) => {
   }
 });
 
+router.get("/archived", async (req, res) => {
+  const user = req.user;
+  try {
+    let todos = await Todo.find({
+      userId: new mongoose.Types.ObjectId(user.id),
+      archived: true,
+    }).exec();
+
+    return res.status(200).send({
+      success: true,
+      message: todos.length ? "" : "No todos found",
+      data: {
+        todos: todos
+      },
+    });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({
+      success: false,
+      message: "Something went wrong. Please try again later",
+      error: err,
+    });
+  }
+});
 
 router.post("/create", async (req, res) => {
   const { name, completed = false } = req.body;
@@ -124,12 +146,13 @@ router.post("/create", async (req, res) => {
 
 router.patch("/update/:todoId", async (req, res) => {
   const { todoId } = req.params;
-  const { isCompleted } = req.body;
+  const { completed = false, archived = false } = req.body;
   try {
     const todo = await Todo.findByIdAndUpdate(
       new mongoose.Types.ObjectId(todoId),
       {
-        completed: isCompleted,
+        completed: completed,
+        archived: archived,
       },
       { new: true, runValidators: true }
     );
