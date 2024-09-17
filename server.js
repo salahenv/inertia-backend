@@ -53,21 +53,37 @@ const validateToken = (req, res, next) => {
 };
 
 app.use(cookieParser());
-const allowedOrigins = ['http://localhost:3000', 'https://inertia-gamma.vercel.app', 'https://api.salahenv.com', 'https://www.salahenv.com'];
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://localhost:3000',
+  'https://inertia-gamma.vercel.app',
+  'https://api.salahenv.com',
+  'https://www.salahenv.com'
+];
+
+const originIsAllowed = (origin) => {
+  // Check if the origin is exactly in the allowedOrigins list
+  if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+  // Check if the origin starts with 'https://inertia-git'
+  if (origin && origin.startsWith('https://inertia')) {
+    return true;
+  }
+  return false;
+};
+
 app.use(cors({
-  origin: function(origin, callback){
-    if(!origin) return callback(null, true);
-    if(allowedOrigins.indexOf(origin) === -1){
-      var msg = 'The CORS policy for this site does not ' +
-      'allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+  origin: function(origin, callback) {
+    if (!origin || originIsAllowed(origin)) {
+      return callback(null, true);
     }
-    return callback(null, true);
-    },
-    credentials: true
-  }),
-  
-);
+    const msg = 'The CORS policy for this site does not ' +
+      'allow access from the specified Origin.';
+    return callback(new Error(msg), false);
+  },
+  credentials: true
+}));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
