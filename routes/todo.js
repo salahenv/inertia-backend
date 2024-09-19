@@ -93,23 +93,35 @@ router.get("/completed", async (req, res) => {
     });
   }
 });
-
 router.get("/archived", async (req, res) => {
   const user = req.user;
+  const { page = 1, limit = 10 } = req.query; // Default page = 1 and limit = 10
+
   try {
-    let todos = await Todo.find({
+    const todos = await Todo.find({
       userId: new mongoose.Types.ObjectId(user.id),
       archived: true,
-    }).exec();
+    })
+      .sort({ createdAt: -1 }) // Sort by createdAt in descending order (most recent first)
+      .skip((page - 1) * limit) // Skip the items for previous pages
+      .limit(parseInt(limit)) // Limit the number of items returned
+      .exec();
+
+    const totalTodos = await Todo.countDocuments({
+      userId: new mongoose.Types.ObjectId(user.id),
+      archived: true,
+    });
 
     return res.status(200).send({
       success: true,
       message: todos.length ? "" : "No todos found",
       data: {
-        todos: todos
+        todos: todos,
+        total: totalTodos, // Total number of todos
+        page: parseInt(page), // Current page number
+        totalPages: Math.ceil(totalTodos / limit), // Total number of pages
       },
     });
-
   } catch (err) {
     console.log(err);
     return res.status(500).send({
@@ -119,6 +131,8 @@ router.get("/archived", async (req, res) => {
     });
   }
 });
+
+
 
 router.post("/create", async (req, res) => {
   const { name, completed = false } = req.body;
