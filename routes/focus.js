@@ -6,9 +6,8 @@ const Area = require("../models/area");
 
 router.get("/", async (req, res) => {
   const user = req.user;
-  const dayOffset = parseInt(req.query.dayOffset) || 0;
-  const isWeekly = req.query.weekly === 'true'; // Check if weekly data is requested
-  const isMonthly = req.query.monthly === 'true'; // Check if monthly data is requested
+  const dayOffset = parseInt(req.query.dayOffset) || 0; // Shift for days
+  const range = req.query.range || "daily"; // Can be 'daily', 'weekly', or 'monthly'
 
   try {
     const currentDate = new Date();
@@ -17,33 +16,38 @@ router.get("/", async (req, res) => {
 
     let startDate, endDate;
 
-    if (isMonthly) {
-      // Monthly data: Start from the 1st day of the current month to the last day of the current month
-      startDate = new Date(localCurrentDate.getFullYear(), localCurrentDate.getMonth(), 1);
+    if (range === "monthly") {
+      // Monthly: Shift by dayOffset, get start and end of the month
+      const adjustedDate = new Date(localCurrentDate);
+      adjustedDate.setDate(adjustedDate.getDate() - dayOffset);
+
+      startDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth(), 1);
       startDate.setHours(0, 0, 0, 0);
 
-      // Get the last day of the current month
-      endDate = new Date(localCurrentDate.getFullYear(), localCurrentDate.getMonth() + 1, 0);
+      endDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth() + 1, 0);
       endDate.setHours(23, 59, 59, 999);
 
-    } else if (isWeekly) {
-      // Weekly data: Monday to Saturday logic
-      const dayOfWeek = localCurrentDate.getDay();
-      startDate = new Date(localCurrentDate);
+    } else if (range === "weekly") {
+      // Weekly: Shift by dayOffset, get Monday to Saturday
+      const adjustedDate = new Date(localCurrentDate);
+      adjustedDate.setDate(adjustedDate.getDate() - dayOffset);
+
+      const dayOfWeek = adjustedDate.getDay();
       const mondayOffset = (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
-      startDate.setDate(localCurrentDate.getDate() - mondayOffset);
+      startDate = new Date(adjustedDate);
+      startDate.setDate(adjustedDate.getDate() - mondayOffset);
       startDate.setHours(0, 0, 0, 0);
 
-      endDate = new Date(localCurrentDate);
-      const saturdayOffset = 6 - dayOfWeek;
-      endDate.setDate(localCurrentDate.getDate() + Math.min(saturdayOffset, 0));
+      endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 5); // Monday to Saturday
       endDate.setHours(23, 59, 59, 999);
 
     } else {
-      // Daily data logic
+      // Default to daily: Shift by dayOffset to get specific day
       startDate = new Date(localCurrentDate);
       startDate.setDate(startDate.getDate() - dayOffset);
       startDate.setHours(0, 0, 0, 0);
+
       endDate = new Date(startDate);
       endDate.setHours(23, 59, 59, 999);
     }
@@ -81,6 +85,85 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
+
+// router.get("/", async (req, res) => {
+//   const user = req.user;
+//   const dayOffset = parseInt(req.query.dayOffset) || 0;
+//   const isWeekly = req.query.weekly === 'true'; // Check if weekly data is requested
+//   const isMonthly = req.query.monthly === 'true'; // Check if monthly data is requested
+
+//   try {
+//     const currentDate = new Date();
+//     const ISTOffset = 5.5 * 60 * 60 * 1000;
+//     const localCurrentDate = new Date(currentDate.getTime() + ISTOffset);
+
+//     let startDate, endDate;
+
+//     if (isMonthly) {
+//       // Monthly data: Start from the 1st day of the current month to the last day of the current month
+//       startDate = new Date(localCurrentDate.getFullYear(), localCurrentDate.getMonth(), 1);
+//       startDate.setHours(0, 0, 0, 0);
+
+//       // Get the last day of the current month
+//       endDate = new Date(localCurrentDate.getFullYear(), localCurrentDate.getMonth() + 1, 0);
+//       endDate.setHours(23, 59, 59, 999);
+
+//     } else if (isWeekly) {
+//       // Weekly data: Monday to Saturday logic
+//       const dayOfWeek = localCurrentDate.getDay();
+//       startDate = new Date(localCurrentDate);
+//       const mondayOffset = (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+//       startDate.setDate(localCurrentDate.getDate() - mondayOffset);
+//       startDate.setHours(0, 0, 0, 0);
+
+//       endDate = new Date(localCurrentDate);
+//       const saturdayOffset = 6 - dayOfWeek;
+//       endDate.setDate(localCurrentDate.getDate() + Math.min(saturdayOffset, 0));
+//       endDate.setHours(23, 59, 59, 999);
+
+//     } else {
+//       // Daily data logic
+//       startDate = new Date(localCurrentDate);
+//       startDate.setDate(startDate.getDate() - dayOffset);
+//       startDate.setHours(0, 0, 0, 0);
+//       endDate = new Date(startDate);
+//       endDate.setHours(23, 59, 59, 999);
+//     }
+
+//     // Convert to UTC
+//     const startDateUTC = new Date(startDate.getTime() - ISTOffset);
+//     const endDateUTC = new Date(endDate.getTime() - ISTOffset);
+
+//     let focus = await Focus.find({
+//       userId: new mongoose.Types.ObjectId(user.id),
+//       createdAt: {
+//         $gte: startDateUTC,
+//         $lt: endDateUTC,
+//       },
+//     });
+
+//     if (focus.length) {
+//       return res.status(200).send({
+//         success: true,
+//         message: "",
+//         data: { focus, date: { start: startDate, end: endDate } },
+//       });
+//     }
+
+//     return res.status(200).send({
+//       success: true,
+//       message: "No focus found",
+//       data: { focus: [], date: { start: startDate, end: endDate } },
+//     });
+//   } catch (err) {
+//     return res.status(500).send({
+//       success: false,
+//       message: "Something went wrong. Please try later",
+//       error: err,
+//     });
+//   }
+// });
 
 
 // router.get("/", async (req, res) => {
