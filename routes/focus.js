@@ -17,30 +17,46 @@ router.get("/", async (req, res) => {
     let startDate, endDate;
 
     if (range === "monthly") {
-      // Monthly: Shift by dayOffset, get start and end of the month
+      // Monthly: Shift by dayOffset, current month 1 to today, past month 1 to the last day of the month
       const adjustedDate = new Date(localCurrentDate);
       adjustedDate.setDate(adjustedDate.getDate() - dayOffset);
 
+      // Start date is always the 1st of the month
       startDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth(), 1);
       startDate.setHours(0, 0, 0, 0);
 
-      endDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth() + 1, 0);
-      endDate.setHours(23, 59, 59, 999);
+      if (adjustedDate.getMonth() === localCurrentDate.getMonth()) {
+        // If in the current month, end date is today
+        endDate = new Date(adjustedDate);
+        endDate.setHours(23, 59, 59, 999);
+      } else {
+        // For past months, end date is the last day of the month
+        endDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth() + 1, 0); // Last day of the month
+        endDate.setHours(23, 59, 59, 999);
+      }
 
     } else if (range === "weekly") {
-      // Weekly: Shift by dayOffset, get Monday to Saturday
+      // Weekly: Shift by dayOffset, current week Monday to today, past weeks Monday to Saturday
       const adjustedDate = new Date(localCurrentDate);
       adjustedDate.setDate(adjustedDate.getDate() - dayOffset);
 
+      // Calculate Monday of the adjusted week
       const dayOfWeek = adjustedDate.getDay();
-      const mondayOffset = (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+      const mondayOffset = (dayOfWeek === 0 ? 6 : dayOfWeek - 1); // Offset for Monday
       startDate = new Date(adjustedDate);
       startDate.setDate(adjustedDate.getDate() - mondayOffset);
       startDate.setHours(0, 0, 0, 0);
 
-      endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 5); // Monday to Saturday
-      endDate.setHours(23, 59, 59, 999);
+      if (adjustedDate.getDay() >= 1 && adjustedDate.getDay() <= 6) {
+        // If in the current week, end date is today
+        endDate = new Date(adjustedDate);
+        endDate.setHours(23, 59, 59, 999);
+      } else {
+        // For past weeks, end date is Saturday
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 5); // Monday to Saturday
+        endDate.setHours(23, 59, 59, 999);
+      }
 
     } else {
       // Default to daily: Shift by dayOffset to get specific day
@@ -85,6 +101,7 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
 
 
 // router.get("/", async (req, res) => {
