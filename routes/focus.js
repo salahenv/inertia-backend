@@ -7,17 +7,49 @@ const Area = require("../models/area");
 router.get("/", async (req, res) => {
   const user = req.user;
   const dayOffset = parseInt(req.query.dayOffset) || 0;
+  const isWeekly = req.query.weekly === 'true'; // Check if weekly data is requested
+  const isMonthly = req.query.monthly === 'true'; // Check if monthly data is requested
 
   try {
     const currentDate = new Date();
     const ISTOffset = 5.5 * 60 * 60 * 1000;
     const localCurrentDate = new Date(currentDate.getTime() + ISTOffset);
-    const startDate = new Date(localCurrentDate);
-    startDate.setDate(startDate.getDate() - dayOffset);
-    startDate.setHours(0, 0, 0, 0);
+
+    let startDate, endDate;
+
+    if (isMonthly) {
+      // Monthly data: Start from the 1st day of the current month to the last day of the current month
+      startDate = new Date(localCurrentDate.getFullYear(), localCurrentDate.getMonth(), 1);
+      startDate.setHours(0, 0, 0, 0);
+
+      // Get the last day of the current month
+      endDate = new Date(localCurrentDate.getFullYear(), localCurrentDate.getMonth() + 1, 0);
+      endDate.setHours(23, 59, 59, 999);
+
+    } else if (isWeekly) {
+      // Weekly data: Monday to Saturday logic
+      const dayOfWeek = localCurrentDate.getDay();
+      startDate = new Date(localCurrentDate);
+      const mondayOffset = (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+      startDate.setDate(localCurrentDate.getDate() - mondayOffset);
+      startDate.setHours(0, 0, 0, 0);
+
+      endDate = new Date(localCurrentDate);
+      const saturdayOffset = 6 - dayOfWeek;
+      endDate.setDate(localCurrentDate.getDate() + Math.min(saturdayOffset, 0));
+      endDate.setHours(23, 59, 59, 999);
+
+    } else {
+      // Daily data logic
+      startDate = new Date(localCurrentDate);
+      startDate.setDate(startDate.getDate() - dayOffset);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(startDate);
+      endDate.setHours(23, 59, 59, 999);
+    }
+
+    // Convert to UTC
     const startDateUTC = new Date(startDate.getTime() - ISTOffset);
-    const endDate = new Date(startDate);
-    endDate.setHours(23, 59, 59, 999);
     const endDateUTC = new Date(endDate.getTime() - ISTOffset);
 
     let focus = await Focus.find({
@@ -32,14 +64,14 @@ router.get("/", async (req, res) => {
       return res.status(200).send({
         success: true,
         message: "",
-        data: { focus, date: startDate },
+        data: { focus, date: { start: startDate, end: endDate } },
       });
     }
 
     return res.status(200).send({
       success: true,
       message: "No focus found",
-      data: { focus: [], date: startDate },
+      data: { focus: [], date: { start: startDate, end: endDate } },
     });
   } catch (err) {
     return res.status(500).send({
@@ -49,6 +81,53 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
+
+// router.get("/", async (req, res) => {
+//   const user = req.user;
+//   const dayOffset = parseInt(req.query.dayOffset) || 0;
+
+//   try {
+//     const currentDate = new Date();
+//     const ISTOffset = 5.5 * 60 * 60 * 1000;
+//     const localCurrentDate = new Date(currentDate.getTime() + ISTOffset);
+//     const startDate = new Date(localCurrentDate);
+//     startDate.setDate(startDate.getDate() - dayOffset);
+//     startDate.setHours(0, 0, 0, 0);
+//     const startDateUTC = new Date(startDate.getTime() - ISTOffset);
+//     const endDate = new Date(startDate);
+//     endDate.setHours(23, 59, 59, 999);
+//     const endDateUTC = new Date(endDate.getTime() - ISTOffset);
+
+//     let focus = await Focus.find({
+//       userId: new mongoose.Types.ObjectId(user.id),
+//       createdAt: {
+//         $gte: startDateUTC,
+//         $lt: endDateUTC,
+//       },
+//     });
+
+//     if (focus.length) {
+//       return res.status(200).send({
+//         success: true,
+//         message: "",
+//         data: { focus, date: startDate },
+//       });
+//     }
+
+//     return res.status(200).send({
+//       success: true,
+//       message: "No focus found",
+//       data: { focus: [], date: startDate },
+//     });
+//   } catch (err) {
+//     return res.status(500).send({
+//       success: false,
+//       message: "Something went wrong. Please try later",
+//       error: err,
+//     });
+//   }
+// });
 
 
 router.post("/create", async (req, res) => {
