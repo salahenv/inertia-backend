@@ -4,62 +4,61 @@ const router = express.Router();
 const Focus = require("../models/focus");
 const Area = require("../models/area");
 
+
 router.get("/", async (req, res) => {
   const user = req.user;
-  const dayOffset = parseInt(req.query.dayOffset) || 0; // Shift for days
+  const dayOffset = parseInt(req.query.dayOffset) || 0; // Shift for weeks
   const range = req.query.range || "daily"; // Can be 'daily', 'weekly', or 'monthly'
 
   try {
     const currentDate = new Date();
     const ISTOffset = 5.5 * 60 * 60 * 1000;
     const localCurrentDate = new Date(currentDate.getTime() + ISTOffset);
-
+    
     let startDate, endDate;
 
-    if (range === "monthly") {
-      // Monthly: Shift by dayOffset, current month 1 to today, past month 1 to the last day of the month
+    if (range === "weekly") {
       const adjustedDate = new Date(localCurrentDate);
-      adjustedDate.setDate(adjustedDate.getDate() - dayOffset);
+      const currentDayOfWeek = adjustedDate.getDay();
+      const mondayOffset = (currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1); // Find Monday
 
-      // Start date is always the 1st of the month
+      // Calculate the Monday for the week with the given dayOffset
+      startDate = new Date(adjustedDate);
+      startDate.setDate(adjustedDate.getDate() - mondayOffset - 7 * dayOffset);
+      startDate.setHours(0, 0, 0, 0); // Monday, 00:00:00
+
+      if (dayOffset === 0) {
+        // Current week: Monday to today
+        endDate = new Date(localCurrentDate);
+        endDate.setHours(23, 59, 59, 999);
+      } else {
+        // Past weeks: Monday to Saturday
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 5); // Saturday
+        endDate.setHours(23, 59, 59, 999);
+      }
+
+    } else if (range === "monthly") {
+      // Monthly logic remains the same (as discussed earlier)
+      const adjustedDate = new Date(localCurrentDate);
+      adjustedDate.setDate(adjustedDate.getDate() - dayOffset * 30); // Adjust for months
+      
+      // Start date is always the 1st of the adjusted month
       startDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth(), 1);
       startDate.setHours(0, 0, 0, 0);
 
       if (adjustedDate.getMonth() === localCurrentDate.getMonth()) {
-        // If in the current month, end date is today
+        // Current month: 1st to today
         endDate = new Date(adjustedDate);
         endDate.setHours(23, 59, 59, 999);
       } else {
-        // For past months, end date is the last day of the month
-        endDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth() + 1, 0); // Last day of the month
-        endDate.setHours(23, 59, 59, 999);
-      }
-
-    } else if (range === "weekly") {
-      // Weekly: Shift by dayOffset, current week Monday to today, past weeks Monday to Saturday
-      const adjustedDate = new Date(localCurrentDate);
-      adjustedDate.setDate(adjustedDate.getDate() - dayOffset);
-
-      // Calculate Monday of the adjusted week
-      const dayOfWeek = adjustedDate.getDay();
-      const mondayOffset = (dayOfWeek === 0 ? 6 : dayOfWeek - 1); // Offset for Monday
-      startDate = new Date(adjustedDate);
-      startDate.setDate(adjustedDate.getDate() - mondayOffset);
-      startDate.setHours(0, 0, 0, 0);
-
-      if (adjustedDate.getDay() >= 1 && adjustedDate.getDay() <= 6) {
-        // If in the current week, end date is today
-        endDate = new Date(adjustedDate);
-        endDate.setHours(23, 59, 59, 999);
-      } else {
-        // For past weeks, end date is Saturday
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 5); // Monday to Saturday
+        // Past months: 1st to last day of the month
+        endDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth() + 1, 0);
         endDate.setHours(23, 59, 59, 999);
       }
 
     } else {
-      // Default to daily: Shift by dayOffset to get specific day
+      // Default daily logic: shift by dayOffset
       startDate = new Date(localCurrentDate);
       startDate.setDate(startDate.getDate() - dayOffset);
       startDate.setHours(0, 0, 0, 0);
@@ -101,6 +100,107 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
+
+
+
+// router.get("/", async (req, res) => {
+//   const user = req.user;
+//   const dayOffset = parseInt(req.query.dayOffset) || 0; // Shift for days
+//   const range = req.query.range || "daily"; // Can be 'daily', 'weekly', or 'monthly'
+
+//   try {
+//     const currentDate = new Date();
+//     const ISTOffset = 5.5 * 60 * 60 * 1000;
+//     const localCurrentDate = new Date(currentDate.getTime() + ISTOffset);
+
+//     let startDate, endDate;
+
+//     if (range === "monthly") {
+//       // Monthly: Shift by dayOffset, current month 1 to today, past month 1 to the last day of the month
+//       const adjustedDate = new Date(localCurrentDate);
+//       adjustedDate.setDate(adjustedDate.getDate() - dayOffset);
+
+//       // Start date is always the 1st of the month
+//       startDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth(), 1);
+//       startDate.setHours(0, 0, 0, 0);
+
+//       if (adjustedDate.getMonth() === localCurrentDate.getMonth()) {
+//         // If in the current month, end date is today
+//         endDate = new Date(adjustedDate);
+//         endDate.setHours(23, 59, 59, 999);
+//       } else {
+//         // For past months, end date is the last day of the month
+//         endDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth() + 1, 0); // Last day of the month
+//         endDate.setHours(23, 59, 59, 999);
+//       }
+
+//     } else if (range === "weekly") {
+//       // Weekly: Shift by dayOffset, current week Monday to today, past weeks Monday to Saturday
+//       const adjustedDate = new Date(localCurrentDate);
+//       adjustedDate.setDate(adjustedDate.getDate() - dayOffset);
+
+//       // Calculate Monday of the adjusted week
+//       const dayOfWeek = adjustedDate.getDay();
+//       const mondayOffset = (dayOfWeek === 0 ? 6 : dayOfWeek - 1); // Offset for Monday
+//       startDate = new Date(adjustedDate);
+//       startDate.setDate(adjustedDate.getDate() - mondayOffset);
+//       startDate.setHours(0, 0, 0, 0);
+
+//       if (adjustedDate.getDay() >= 1 && adjustedDate.getDay() <= 6) {
+//         // If in the current week, end date is today
+//         endDate = new Date(adjustedDate);
+//         endDate.setHours(23, 59, 59, 999);
+//       } else {
+//         // For past weeks, end date is Saturday
+//         endDate = new Date(startDate);
+//         endDate.setDate(startDate.getDate() + 5); // Monday to Saturday
+//         endDate.setHours(23, 59, 59, 999);
+//       }
+
+//     } else {
+//       // Default to daily: Shift by dayOffset to get specific day
+//       startDate = new Date(localCurrentDate);
+//       startDate.setDate(startDate.getDate() - dayOffset);
+//       startDate.setHours(0, 0, 0, 0);
+
+//       endDate = new Date(startDate);
+//       endDate.setHours(23, 59, 59, 999);
+//     }
+
+//     // Convert to UTC
+//     const startDateUTC = new Date(startDate.getTime() - ISTOffset);
+//     const endDateUTC = new Date(endDate.getTime() - ISTOffset);
+
+//     let focus = await Focus.find({
+//       userId: new mongoose.Types.ObjectId(user.id),
+//       createdAt: {
+//         $gte: startDateUTC,
+//         $lt: endDateUTC,
+//       },
+//     });
+
+//     if (focus.length) {
+//       return res.status(200).send({
+//         success: true,
+//         message: "",
+//         data: { focus, date: { start: startDate, end: endDate } },
+//       });
+//     }
+
+//     return res.status(200).send({
+//       success: true,
+//       message: "No focus found",
+//       data: { focus: [], date: { start: startDate, end: endDate } },
+//     });
+//   } catch (err) {
+//     return res.status(500).send({
+//       success: false,
+//       message: "Something went wrong. Please try later",
+//       error: err,
+//     });
+//   }
+// });
 
 
 
