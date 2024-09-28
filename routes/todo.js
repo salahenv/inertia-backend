@@ -2,6 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 const Todo = require("../models/todo");
+const RoutineTodo = require('../models/routineTodo');
+const cron = require('node-cron');
 
 router.get("/", async (req, res) => {
   const user = req.user;
@@ -213,5 +215,87 @@ router.delete("/remove/:todoId", async (req, res) => {
     });
   }
 });
+
+router.post("/create-routine-todo", async (req, res) => {
+  const { name, repeatMode, repeatOnEvery } = req.body;
+  const user = req.user;
+
+  let routineTodo = new RoutineTodo({
+    userId: new mongoose.Types.ObjectId(user.id),
+    name,
+    repeatMode,
+    repeatOnEvery,
+  });
+
+  try {
+    routineTodo = await routineTodo.save();
+    return res.status(201).send({
+      success: true,
+      message: "Routine todo created",
+      data: { routineTodo },
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: "something went wrong",
+      error: { error },
+    });
+  }
+});
+
+router.get("/routine-todos", async (req, res) => {
+  const user = req.user;
+
+  try {
+    // Fetch all routine todos for the logged-in user
+    const routineTodos = await RoutineTodo.find({ userId: new mongoose.Types.ObjectId(user.id) });
+
+    return res.status(200).send({
+      success: true,
+      message: "Routine todos fetched successfully",
+      data: {todos: routineTodos},
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: "Something went wrong",
+      error: { error },
+    });
+  }
+});
+
+
+// Runs every day at midnight
+cron.schedule('0 0 * * *', async () => {
+  const today = new Date();
+  const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short' }).toLowerCase(); // 'mon', 'tue', etc.
+  const dayOfMonth = today.getDate(); // 1, 2, ..., 31
+
+  // Fetch all routine todos
+  const routineTodos = await RoutineTodo.find();
+
+  routineTodos.forEach(async (routine) => {
+    let shouldCreateTodo = false;
+
+    if (routine.repeatMode === 'daily') {
+      shouldCreateTodo = true;
+    } else if (routine.repeatMode === 'weekly' && routine.repeatOnEvery === dayOfWeek) {
+      shouldCreateTodo = true;
+    } else if (routine.repeatMode === 'monthly' && parseInt(routine.repeatOnEvery) === dayOfMonth) {
+      shouldCreateTodo = true;
+    }
+
+    if (shouldCreateTodo) {
+      // Create the actual todo for the user
+      const newTodo = new Todo({
+        userId: routine.userId,
+        name: routine.todoName,
+        completed: false,
+      });
+      await newTodo.save();
+    }
+  });
+});
+
 
 module.exports = router;
