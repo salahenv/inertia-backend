@@ -300,8 +300,8 @@ cron.schedule('*/5 * * * *', async () => {
   const routineTodos = await RoutineTodo.find();
 
   routineTodos.forEach(async (routine) => {
-    let shouldCreateTodo = false;
-
+    console.log("===>", routine);
+    newTodo
     if (routine.repeatMode === 'daily') {
       shouldCreateTodo = true;
     } else if (routine.repeatMode === 'weekly' && routine.repeatOnEvery === dayOfWeek) {
@@ -309,7 +309,7 @@ cron.schedule('*/5 * * * *', async () => {
     } else if (routine.repeatMode === 'monthly' && parseInt(routine.repeatOnEvery) === dayOfMonth) {
       shouldCreateTodo = true;
     }
-
+    console.log("===>", shouldCreateTodo);
     if (shouldCreateTodo) {
       // Create the actual todo for the user
       const newTodo = new Todo({
@@ -317,6 +317,7 @@ cron.schedule('*/5 * * * *', async () => {
         name: routine.todoName,
         completed: false,
       });
+      console.log("===>", newTodo);
       await newTodo.save();
     }
   });
