@@ -294,11 +294,11 @@ router.get("/routine-todos", async (req, res) => {
 cron.schedule('0 1 * * *', 
   async () => {
     const today = new Date();
-    const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short' }).toLowerCase();
-    const dayOfMonth = today.getDate();
-    let shouldCreateTodo = false;
+    const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase();
+    const dayOfMonth = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getDate();
     const routineTodos = await RoutineTodo.find();
     routineTodos.forEach(async (routine) => {
+      let shouldCreateTodo = false;
       if (routine.repeatMode === 'daily') {
         shouldCreateTodo = true;
       } else if (routine.repeatMode === 'weekly' && routine.repeatOnEvery === dayOfWeek) {
