@@ -292,6 +292,7 @@ router.get("/routine-todos", async (req, res) => {
 
 // Runs every day at midnight
 cron.schedule('*/5 * * * *', async () => {
+  console.log("running every 5 minutes");
   const today = new Date();
   const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short' }).toLowerCase(); // 'mon', 'tue', etc.
   const dayOfMonth = today.getDate(); // 1, 2, ..., 31
@@ -301,7 +302,6 @@ cron.schedule('*/5 * * * *', async () => {
 
   routineTodos.forEach(async (routine) => {
     console.log("===>", routine);
-    newTodo
     if (routine.repeatMode === 'daily') {
       shouldCreateTodo = true;
     } else if (routine.repeatMode === 'weekly' && routine.repeatOnEvery === dayOfWeek) {
