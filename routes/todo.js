@@ -291,7 +291,7 @@ router.get("/routine-todos", async (req, res) => {
 
 
 // Runs every day at midnight
-cron.schedule('0 1 * * *', 
+cron.schedule('0 2 * * *', 
   async () => {
     const today = new Date();
     const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase();
