@@ -291,35 +291,33 @@ router.get("/routine-todos", async (req, res) => {
 
 
 // Runs every day at midnight
-cron.schedule('0 0 * * *', async () => {
-  console.log("running every 5 minutes");
-  const today = new Date();
-  const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short' }).toLowerCase(); // 'mon', 'tue', etc.
-  const dayOfMonth = today.getDate(); // 1, 2, ..., 31
-  let shouldCreateTodo = false;
-  const routineTodos = await RoutineTodo.find();
-
-  routineTodos.forEach(async (routine) => {
-    console.log("===>", routine);
-    if (routine.repeatMode === 'daily') {
-      shouldCreateTodo = true;
-    } else if (routine.repeatMode === 'weekly' && routine.repeatOnEvery === dayOfWeek) {
-      shouldCreateTodo = true;
-    } else if (routine.repeatMode === 'monthly' && parseInt(routine.repeatOnEvery) === dayOfMonth) {
-      shouldCreateTodo = true;
-    }
-    console.log("===>", shouldCreateTodo);
-    if (shouldCreateTodo) {
-      // Create the actual todo for the user
-      const newTodo = new Todo({
-        userId: routine.userId,
-        name: routine.name,
-        completed: false,
-        archived: false,
-      });
-      await newTodo.save();
-    }
-  });
+cron.schedule('0 1 * * *', 
+  async () => {
+    const today = new Date();
+    const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short' }).toLowerCase();
+    const dayOfMonth = today.getDate();
+    let shouldCreateTodo = false;
+    const routineTodos = await RoutineTodo.find();
+    routineTodos.forEach(async (routine) => {
+      if (routine.repeatMode === 'daily') {
+        shouldCreateTodo = true;
+      } else if (routine.repeatMode === 'weekly' && routine.repeatOnEvery === dayOfWeek) {
+        shouldCreateTodo = true;
+      } else if (routine.repeatMode === 'monthly' && parseInt(routine.repeatOnEvery) === dayOfMonth) {
+        shouldCreateTodo = true;
+      }
+      if (shouldCreateTodo) {
+        const newTodo = new Todo({
+          userId: routine.userId,
+          name: routine.name,
+          completed: false,
+          archived: false,
+        });
+        await newTodo.save();
+      }
+    });
+}, {
+  timezone: "Asia/Kolkata"
 });
 
 
