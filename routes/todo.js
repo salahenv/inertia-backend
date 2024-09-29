@@ -291,13 +291,12 @@ router.get("/routine-todos", async (req, res) => {
 
 
 // Runs every day at midnight
-cron.schedule('*/5 * * * *', async () => {
+cron.schedule('0 0 * * *', async () => {
   console.log("running every 5 minutes");
   const today = new Date();
   const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short' }).toLowerCase(); // 'mon', 'tue', etc.
   const dayOfMonth = today.getDate(); // 1, 2, ..., 31
   let shouldCreateTodo = false;
-  // Fetch all routine todos
   const routineTodos = await RoutineTodo.find();
 
   routineTodos.forEach(async (routine) => {
@@ -314,10 +313,10 @@ cron.schedule('*/5 * * * *', async () => {
       // Create the actual todo for the user
       const newTodo = new Todo({
         userId: routine.userId,
-        name: routine.todoName,
+        name: routine.name,
         completed: false,
+        archived: false,
       });
-      console.log("===>", newTodo);
       await newTodo.save();
     }
   });
