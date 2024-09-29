@@ -220,7 +220,7 @@ router.post("/create-routine-todo", async (req, res) => {
   const { name, repeatMode, repeatOnEvery } = req.body;
   const user = req.user;
 
-  let routineTodo = new RoutineTodo({
+  let routine = new RoutineTodo({
     userId: new mongoose.Types.ObjectId(user.id),
     name,
     repeatMode,
@@ -228,11 +228,36 @@ router.post("/create-routine-todo", async (req, res) => {
   });
 
   try {
-    routineTodo = await routineTodo.save();
+    routine = await routine.save();
     return res.status(201).send({
       success: true,
       message: "Routine todo created",
-      data: { routineTodo },
+      data: { routine },
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: "something went wrong",
+      error: { error },
+    });
+  }
+});
+
+router.delete("/remove-routine-todo/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const routine = await RoutineTodo.findByIdAndDelete(
+      new mongoose.Types.ObjectId(id)
+    );
+    if (!routine) {
+      return res
+        .status(404)
+        .json({ success: false, message: "routine not found" });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "routine deleted",
+      data: { routine },
     });
   } catch (error) {
     return res.status(500).send({
@@ -248,12 +273,12 @@ router.get("/routine-todos", async (req, res) => {
 
   try {
     // Fetch all routine todos for the logged-in user
-    const routineTodos = await RoutineTodo.find({ userId: new mongoose.Types.ObjectId(user.id) });
+    const routines = await RoutineTodo.find({ userId: new mongoose.Types.ObjectId(user.id) });
 
     return res.status(200).send({
       success: true,
       message: "Routine todos fetched successfully",
-      data: {todos: routineTodos},
+      data: {todos: routines},
     });
   } catch (error) {
     return res.status(500).send({
