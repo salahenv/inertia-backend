@@ -312,6 +312,7 @@ cron.schedule('0 0 * * *',
           name: routine.name,
           completed: false,
           archived: false,
+          routine: true,
         });
         await newTodo.save();
       }
