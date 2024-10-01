@@ -291,35 +291,60 @@ router.get("/routine-todos", async (req, res) => {
 
 
 // Runs every day at midnight
-cron.schedule('0 0 * * *', 
-  async () => {
-    const today = new Date();
-    const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase();
-    const dayOfMonth = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getDate();
-    const routineTodos = await RoutineTodo.find();
-    routineTodos.forEach(async (routine) => {
-      let shouldCreateTodo = false;
-      if (routine.repeatMode === 'daily') {
-        shouldCreateTodo = true;
-      } else if (routine.repeatMode === 'weekly' && routine.repeatOnEvery === dayOfWeek) {
-        shouldCreateTodo = true;
-      } else if (routine.repeatMode === 'monthly' && parseInt(routine.repeatOnEvery) === dayOfMonth) {
-        shouldCreateTodo = true;
+cron.schedule('0 18 * * *', async () => {
+  const today = new Date();
+  const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase();
+  const dayOfMonth = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getDate();
+
+  // Fetch all routine todos
+  const routineTodos = await RoutineTodo.find();
+
+  routineTodos.forEach(async (routine) => {
+    let shouldCreateTodo = false;
+
+    // Check for daily repeat mode
+    if (routine.repeatMode === 'daily') {
+      shouldCreateTodo = true;
+    }
+
+    // Check for weekly repeat mode
+    else if (routine.repeatMode === 'weekly') {
+      if (Array.isArray(routine.repeatOnEvery)) {
+        // If `repeatOnEvery` is an array, check if today's day of the week is in the array
+        shouldCreateTodo = routine.repeatOnEvery.includes(dayOfWeek);
+      } else {
+        // For single value (backward compatibility)
+        shouldCreateTodo = routine.repeatOnEvery === dayOfWeek;
       }
-      if (shouldCreateTodo) {
-        const newTodo = new Todo({
-          userId: routine.userId,
-          name: routine.name,
-          completed: false,
-          archived: false,
-          routine: true,
-        });
-        await newTodo.save();
+    }
+
+    // Check for monthly repeat mode
+    else if (routine.repeatMode === 'monthly') {
+      if (Array.isArray(routine.repeatOnEvery)) {
+        // If `repeatOnEvery` is an array, check if today's day of the month is in the array
+        shouldCreateTodo = routine.repeatOnEvery.includes(dayOfMonth.toString());
+      } else {
+        // For single value (backward compatibility)
+        shouldCreateTodo = routine.repeatOnEvery === dayOfMonth.toString();
       }
-    });
+    }
+
+    // If a new todo should be created, proceed to create it
+    if (shouldCreateTodo) {
+      const newTodo = new Todo({
+        userId: routine.userId,
+        name: routine.name,
+        completed: false,
+        archived: false,
+        routine: true,
+      });
+      await newTodo.save();
+    }
+  });
 }, {
   timezone: "Asia/Kolkata"
 });
+
 
 
 module.exports = router;
