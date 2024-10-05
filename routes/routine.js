@@ -106,51 +106,109 @@ router.get("/", async (req, res) => {
   }
 });
 
-cron.schedule('0 0 * * *', async () => {
-    const today = new Date();
-    const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase();
-    const dayOfMonth = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getDate();
-    const routineTodos = await RoutineTodo.find();
+// cron.schedule('0 0 * * *', async () => {
+//     const today = new Date();
+//     const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase();
+//     const dayOfMonth = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getDate();
+//     const routineTodos = await RoutineTodo.find();
 
-    routineTodos.forEach(async (routine) => {
-        let shouldCreateTodo = false;
+//     routineTodos.forEach(async (routine) => {
+//         let shouldCreateTodo = false;
 
-        if (routine.repeatMode === 'daily') {
-            shouldCreateTodo = true;
-        }
+//         if (routine.repeatMode === 'daily') {
+//             shouldCreateTodo = true;
+//         }
             
-        else if (routine.repeatMode === 'weekly') {
-            if (Array.isArray(routine.repeatOnEvery)) {
+//         else if (routine.repeatMode === 'weekly') {
+//             if (Array.isArray(routine.repeatOnEvery)) {
             
-                shouldCreateTodo = routine.repeatOnEvery.includes(dayOfWeek);
-            } else {
-                shouldCreateTodo = routine.repeatOnEvery === dayOfWeek;
-            }
-        }
+//                 shouldCreateTodo = routine.repeatOnEvery.includes(dayOfWeek);
+//             } else {
+//                 shouldCreateTodo = routine.repeatOnEvery === dayOfWeek;
+//             }
+//         }
             
-        else if (routine.repeatMode === 'monthly') {
-            if (Array.isArray(routine.repeatOnEvery)) {
-                shouldCreateTodo = routine.repeatOnEvery.includes(dayOfMonth.toString());
-            } else {
-                shouldCreateTodo = routine.repeatOnEvery === dayOfMonth.toString();
-            }
-        }
+//         else if (routine.repeatMode === 'monthly') {
+//             if (Array.isArray(routine.repeatOnEvery)) {
+//                 shouldCreateTodo = routine.repeatOnEvery.includes(dayOfMonth.toString());
+//             } else {
+//                 shouldCreateTodo = routine.repeatOnEvery === dayOfMonth.toString();
+//             }
+//         }
 
-        const isEligibleToCreateTodo = shouldCreateTodo && (!routine.hasOwnProperty('isActive') || routine.isActive)
+//         const isEligibleToCreateTodo = shouldCreateTodo && (!routine.hasOwnProperty('isActive') || routine.isActive)
         
-        if (isEligibleToCreateTodo ) {
-            const newTodo = new Todo({
-                userId: routine.userId,
-                name: routine.name,
-                completed: false,
-                archived: false,
-                routine: true,
-            });
-            await newTodo.save();
-        }
-    });
+//         if (isEligibleToCreateTodo ) {
+//             const newTodo = new Todo({
+//                 userId: routine.userId,
+//                 name: routine.name,
+//                 completed: false,
+//                 archived: false,
+//                 routine: true,
+//             });
+//             await newTodo.save();
+//         }
+//     });
+// }, {
+//   timezone: "Asia/Kolkata"
+// });
+
+cron.schedule('0 0 * * *', async () => {
+  console.log("cron job");
+  const today = new Date();
+  const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase();
+  const dayOfMonth = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getDate();
+  
+  const routineTodos = await RoutineTodo.find();
+
+  for (const routine of routineTodos) {
+      let shouldCreateTodo = false;
+
+      // Check if a todo should be created based on repeatMode
+      if (routine.repeatMode === 'daily') {
+          shouldCreateTodo = true;
+      } else if (routine.repeatMode === 'weekly') {
+          shouldCreateTodo = Array.isArray(routine.repeatOnEvery) 
+              ? routine.repeatOnEvery.includes(dayOfWeek) 
+              : routine.repeatOnEvery === dayOfWeek;
+      } else if (routine.repeatMode === 'monthly') {
+          shouldCreateTodo = Array.isArray(routine.repeatOnEvery) 
+              ? routine.repeatOnEvery.includes(dayOfMonth.toString()) 
+              : routine.repeatOnEvery === dayOfMonth.toString();
+      }
+
+      // Fetch the last todo created from this routine
+      const existingTodo = await Todo.findOne({ userId: routine.userId, name: routine.name, routine: true, completed: false });
+      console.log("existing todo", existingTodo);
+      // If a previous todo exists, check if it's completed or missed
+      if (existingTodo) {
+          if (!existingTodo.completed) {
+              routine.missedCounter = (routine.missedCounter || 0) + 1; // Increment missed counter
+          } else {
+              routine.completedCounter = (routine.completedCounter || 0) + 1; // Increment completed counter
+          }
+          await routine.save();
+          // Remove the existing todo to avoid duplicates
+          await Todo.deleteOne({ _id: existingTodo._id });
+      }
+
+      // Create a new todo if it's eligible
+      console.log("creating....");
+      if (shouldCreateTodo) {
+          const newTodo = new Todo({
+              userId: routine.userId,
+              name: routine.name,
+              completed: false,
+              archived: false,
+              routine: true,
+          });
+          await newTodo.save();
+      }
+  }
 }, {
-  timezone: "Asia/Kolkata"
+timezone: "Asia/Kolkata"
 });
+
+
 
 module.exports = router;
