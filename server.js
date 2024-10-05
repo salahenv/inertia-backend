@@ -90,6 +90,7 @@ app.use(express.json());
 app.use('/auth', require('./routes/auth'));
 app.use('/focus', validateToken, require('./routes/focus'));
 app.use('/todo', validateToken, require('./routes/todo'));
+app.use('/routine', validateToken, require('./routes/routine'));
 
 async function startServer () {
     try {
