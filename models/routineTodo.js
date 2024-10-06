@@ -25,7 +25,7 @@ const routineTodoSchema = new mongoose.Schema({
     },
   },
   missedCounter: { type: Number, default: 0 },  // Track missed todos
-  completedCounter: { type: Number, default: 0 },  // Track completed todos
+  totolCounter: { type: Number, default: 0 },
 }, { timestamps: true });
 
 module.exports = mongoose.model('RoutineTodo', routineTodoSchema);

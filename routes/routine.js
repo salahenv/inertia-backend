@@ -106,55 +106,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-// cron.schedule('0 0 * * *', async () => {
-//     const today = new Date();
-//     const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase();
-//     const dayOfMonth = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getDate();
-//     const routineTodos = await RoutineTodo.find();
-
-//     routineTodos.forEach(async (routine) => {
-//         let shouldCreateTodo = false;
-
-//         if (routine.repeatMode === 'daily') {
-//             shouldCreateTodo = true;
-//         }
-            
-//         else if (routine.repeatMode === 'weekly') {
-//             if (Array.isArray(routine.repeatOnEvery)) {
-            
-//                 shouldCreateTodo = routine.repeatOnEvery.includes(dayOfWeek);
-//             } else {
-//                 shouldCreateTodo = routine.repeatOnEvery === dayOfWeek;
-//             }
-//         }
-            
-//         else if (routine.repeatMode === 'monthly') {
-//             if (Array.isArray(routine.repeatOnEvery)) {
-//                 shouldCreateTodo = routine.repeatOnEvery.includes(dayOfMonth.toString());
-//             } else {
-//                 shouldCreateTodo = routine.repeatOnEvery === dayOfMonth.toString();
-//             }
-//         }
-
-//         const isEligibleToCreateTodo = shouldCreateTodo && (!routine.hasOwnProperty('isActive') || routine.isActive)
-        
-//         if (isEligibleToCreateTodo ) {
-//             const newTodo = new Todo({
-//                 userId: routine.userId,
-//                 name: routine.name,
-//                 completed: false,
-//                 archived: false,
-//                 routine: true,
-//             });
-//             await newTodo.save();
-//         }
-//     });
-// }, {
-//   timezone: "Asia/Kolkata"
-// });
-
-cron.schedule('0 0 * * *', async () => {
-  console.log("cron job");
+cron.schedule('55 02 * * *', async () => {
+  console.log("cron job started");
   const today = new Date();
   const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase();
   const dayOfMonth = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getDate();
@@ -164,6 +117,7 @@ cron.schedule('0 0 * * *', async () => {
   for (const routine of routineTodos) {
       let shouldCreateTodo = false;
 
+      // Check if a todo should be created based on repeatMode
       if (routine.repeatMode === 'daily') {
           shouldCreateTodo = true;
       } else if (routine.repeatMode === 'weekly') {
@@ -176,36 +130,33 @@ cron.schedule('0 0 * * *', async () => {
               : routine.repeatOnEvery === dayOfMonth.toString();
       }
 
-      // const existingTodo = await Todo.findOne({ userId: routine.userId, name: routine.name, routine: true });
-      // console.log("existing todo", existingTodo);
-      // // If a previous todo exists, check if it's completed or missed
-      // if (existingTodo) {
-      //     if (existingTodo.completed) {
-      //       routine.completedCounter = (routine.completedCounter || 0) + 1;
-      //     } else {
-      //       routine.missedCounter = (routine.missedCounter || 0) + 1;
-      //     }
-      //     await routine.save();
-      //     await Todo.deleteOne({ _id: existingTodo._id });
-      // }
-
-      console.log("creating....");
-      const isEligibleToCreateTodo = shouldCreateTodo && (!routine.hasOwnProperty('isActive') || routine.isActive)
-      if (isEligibleToCreateTodo) {
-          const newTodo = new Todo({
-              userId: routine.userId,
-              name: routine.name,
-              completed: false,
-              archived: false,
-              routine: true,
-          });
-          await newTodo.save();
+      const isEligibleToCreateTodo = shouldCreateTodo && (!routine.hasOwnProperty('isActive') || routine.isActive);
+      
+      if(isEligibleToCreateTodo) {
+        console.log("routine is eligible for todo creation", routine);
+        // existing todo which is created from routine && not completed && not archived
+        const existingInCompletedRoutineTodo = await Todo.findOne({ userId: routine.userId, name: routine.name, routine: true, completed: false, archived: false });
+        if(existingInCompletedRoutineTodo) {
+          console.log("existing imcompleted routine todo", existingInCompletedRoutineTodo);
+          await Todo.deleteOne({ _id: existingInCompletedRoutineTodo._id });
+          routine.missedCounter = (routine.missedCounter || 0) + 1;
+        }
+        routine.totolCounter = (routine.totolCounter || 0) + 1;
+        await routine.save();
+        console.log("updated routine counters", routine);
+        // creating todo
+        const newTodo = new Todo({
+          userId: routine.userId,
+          name: routine.name,
+          completed: false,
+          archived: false,
+          routine: true,
+        });
+        await newTodo.save();
       }
   }
 }, {
-timezone: "Asia/Kolkata"
+  timezone: "Asia/Kolkata"
 });
-
-
 
 module.exports = router;
