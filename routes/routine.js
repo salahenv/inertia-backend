@@ -106,7 +106,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-cron.schedule('55 02 * * *', async () => {
+cron.schedule('05 03 * * *', async () => {
   console.log("cron job started");
   const today = new Date();
   const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase();
@@ -130,7 +130,7 @@ cron.schedule('55 02 * * *', async () => {
               : routine.repeatOnEvery === dayOfMonth.toString();
       }
 
-      const isEligibleToCreateTodo = shouldCreateTodo && (!routine.hasOwnProperty('isActive') || routine.isActive);
+      const isEligibleToCreateTodo = shouldCreateTodo && ((routine.hasOwnProperty('isActive') && routine.isActive) || !routine.hasOwnProperty('isActive'));
       
       if(isEligibleToCreateTodo) {
         console.log("routine is eligible for todo creation", routine);
