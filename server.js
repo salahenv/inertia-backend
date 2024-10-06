@@ -87,6 +87,11 @@ app.use(cors({
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+
+app.get('/health', async (req, res) => {
+  res.status(200).send({success: true, message: 'service is up'});
+});
+
 app.use('/auth', require('./routes/auth'));
 app.use('/focus', validateToken, require('./routes/focus'));
 app.use('/todo', validateToken, require('./routes/todo'));
