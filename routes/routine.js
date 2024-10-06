@@ -130,7 +130,7 @@ cron.schedule('0 0 * * *', async () => {
               : routine.repeatOnEvery === dayOfMonth.toString();
       }
 
-      const isEligibleToCreateTodo = shouldCreateTodo && ((routine.hasOwnProperty('isActive') && routine.isActive) || !routine.hasOwnProperty('isActive'));
+      const isEligibleToCreateTodo = shouldCreateTodo && routine.isActive;
       
       if(isEligibleToCreateTodo) {
         console.log("routine is eligible for todo creation", routine);
