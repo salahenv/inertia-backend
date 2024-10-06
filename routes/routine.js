@@ -164,7 +164,6 @@ cron.schedule('0 0 * * *', async () => {
   for (const routine of routineTodos) {
       let shouldCreateTodo = false;
 
-      // Check if a todo should be created based on repeatMode
       if (routine.repeatMode === 'daily') {
           shouldCreateTodo = true;
       } else if (routine.repeatMode === 'weekly') {
@@ -177,24 +176,22 @@ cron.schedule('0 0 * * *', async () => {
               : routine.repeatOnEvery === dayOfMonth.toString();
       }
 
-      // Fetch the last todo created from this routine
-      const existingTodo = await Todo.findOne({ userId: routine.userId, name: routine.name, routine: true, completed: false });
-      console.log("existing todo", existingTodo);
-      // If a previous todo exists, check if it's completed or missed
-      if (existingTodo) {
-          if (!existingTodo.completed) {
-              routine.missedCounter = (routine.missedCounter || 0) + 1; // Increment missed counter
-          } else {
-              routine.completedCounter = (routine.completedCounter || 0) + 1; // Increment completed counter
-          }
-          await routine.save();
-          // Remove the existing todo to avoid duplicates
-          await Todo.deleteOne({ _id: existingTodo._id });
-      }
+      // const existingTodo = await Todo.findOne({ userId: routine.userId, name: routine.name, routine: true });
+      // console.log("existing todo", existingTodo);
+      // // If a previous todo exists, check if it's completed or missed
+      // if (existingTodo) {
+      //     if (existingTodo.completed) {
+      //       routine.completedCounter = (routine.completedCounter || 0) + 1;
+      //     } else {
+      //       routine.missedCounter = (routine.missedCounter || 0) + 1;
+      //     }
+      //     await routine.save();
+      //     await Todo.deleteOne({ _id: existingTodo._id });
+      // }
 
-      // Create a new todo if it's eligible
       console.log("creating....");
-      if (shouldCreateTodo) {
+      const isEligibleToCreateTodo = shouldCreateTodo && (!routine.hasOwnProperty('isActive') || routine.isActive)
+      if (isEligibleToCreateTodo) {
           const newTodo = new Todo({
               userId: routine.userId,
               name: routine.name,
