@@ -106,7 +106,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-cron.schedule('05 03 * * *', async () => {
+cron.schedule('0 0 * * *', async () => {
   console.log("cron job started");
   const today = new Date();
   const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase();
