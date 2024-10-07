@@ -260,6 +260,32 @@ router.post("/:todoId/comments", async (req, res) => {
   }
 });
 
+router.get("/:todoId/comments", async (req, res) => {
+  const { todoId } = req.params;
+
+  try {
+    const todo = await Todo.findById(new mongoose.Types.ObjectId(todoId)).populate('comments.userId', 'name email'); // Populate user details for comments
+
+    if (!todo) {
+      return res.status(404).send({
+        success: false,
+        message: "Todo not found",
+      });
+    }
+
+    return res.status(200).send({
+      success: true,
+      message: "Comments fetched successfully",
+      data: { comments: todo.comments },
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: "Something went wrong",
+      error,
+    });
+  }
+});
 
 
 
