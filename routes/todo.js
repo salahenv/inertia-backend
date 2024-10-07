@@ -134,8 +134,6 @@ router.get("/archived", async (req, res) => {
   }
 });
 
-
-
 router.post("/create", async (req, res) => {
   const { name, completed = false } = req.body;
   const user = req.user;
@@ -215,5 +213,54 @@ router.delete("/remove/:todoId", async (req, res) => {
     });
   }
 });
+
+router.post("/:todoId/comments", async (req, res) => {
+  const { todoId } = req.params;
+  const { text } = req.body; // Assuming the comment text is passed in the request body
+  const user = req.user; // The user who is posting the comment
+
+  if (!text) {
+    return res.status(400).send({
+      success: false,
+      message: "Comment text is required",
+    });
+  }
+
+  try {
+    const todo = await Todo.findById(new mongoose.Types.ObjectId(todoId));
+    
+    if (!todo) {
+      return res.status(404).send({
+        success: false,
+        message: "Todo not found",
+      });
+    }
+
+    // Add the comment to the todo's comments array
+    todo.comments.push({
+      userId: user.id, 
+      text
+    });
+
+    await todo.save(); // Save the updated todo with the new comment
+    return res.status(200).send({
+      success: true,
+      message: "Comment added successfully",
+      data: { 
+        todoId: todo._id,
+        comments: todo.comments 
+      },
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: "Something went wrong",
+      error,
+    });
+  }
+});
+
+
+
 
 module.exports = router;
