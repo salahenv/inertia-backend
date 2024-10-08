@@ -2,8 +2,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 const Todo = require("../models/todo");
-const RoutineTodo = require('../models/routineTodo');
-const cron = require('node-cron');
 
 router.get("/", async (req, res) => {
   const user = req.user;
