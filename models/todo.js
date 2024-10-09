@@ -32,6 +32,9 @@ const todoSchema = new mongoose.Schema({
     routine: {
         type: Boolean,
     },
+    missed: {
+        type: Boolean,
+    },
     comments: [commentSchema]
 }, { timestamps: true });
   

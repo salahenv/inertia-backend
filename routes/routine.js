@@ -138,7 +138,8 @@ cron.schedule('0 0 * * *', async () => {
         const existingInCompletedRoutineTodo = await Todo.findOne({ userId: routine.userId, name: routine.name, routine: true, completed: false, archived: false });
         if(existingInCompletedRoutineTodo) {
           console.log("existing imcompleted routine todo", existingInCompletedRoutineTodo);
-          await Todo.deleteOne({ _id: existingInCompletedRoutineTodo._id });
+          existingInCompletedRoutineTodo.missed = true;
+          await existingInCompletedRoutineTodo.save();
           routine.missedCounter = (routine.missedCounter || 0) + 1;
         }
         routine.totolCounter = (routine.totolCounter || 0) + 1;
@@ -151,6 +152,7 @@ cron.schedule('0 0 * * *', async () => {
           completed: false,
           archived: false,
           routine: true,
+          missed: false,
         });
         await newTodo.save();
       }
