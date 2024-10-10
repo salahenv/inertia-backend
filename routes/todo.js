@@ -149,6 +149,10 @@ router.post("/create", async (req, res) => {
     userId: new mongoose.Types.ObjectId(user.id),
     name,
     completed,
+    archived: false,
+    missed: false,
+    routine: false,
+    comments: []
   });
   try {
     todo = await todo.save();

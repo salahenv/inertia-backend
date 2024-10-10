@@ -153,6 +153,7 @@ cron.schedule('0 0 * * *', async () => {
           archived: false,
           routine: true,
           missed: false,
+          comments: [],
         });
         await newTodo.save();
       }
