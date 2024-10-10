@@ -20,14 +20,24 @@ router.get("/", async (req, res) => {
     let todo = await Todo.find({
       userId: new mongoose.Types.ObjectId(user.id),
       $or: [
-        { completed: false },
+        { 
+          completed: false, 
+          $or: [
+            { missed: { $exists: false } },
+            { missed: false }
+          ] 
+        },
         {
           completed: true,
           updatedAt: { $gte: startDateUTC, $lt: endDateUTC },
-        },
+          $or: [
+            { missed: { $exists: false } },
+            { missed: false }
+          ]
+        }
       ],
       archived: { $ne: true },
-    });
+    });    
 
     if (todo.length) {
       return res.status(200).send({
