@@ -139,21 +139,22 @@ cron.schedule('0 0 * * *', async () => {
         if(existingInCompletedRoutineTodo) {
           console.log("existing imcompleted routine todo", existingInCompletedRoutineTodo);
           try {
-            existingInCompletedRoutineTodo.missed = true;
-            existingInCompletedRoutineTodo = await existingInCompletedRoutineTodo.save();
-            console.log("existing imcompleted routine todo marked missed", existingInCompletedRoutineTodo);
+            console.log('deleting...', existingInCompletedRoutineTodo);
+            await Todo.deleteOne({ _id: existingInCompletedRoutineTodo._id });
+            console.log('deleted', existingInCompletedRoutineTodo);
           } catch(error) {
-            console.log('error while marking missed', error);
+            console.log('error while deleting existing imcompleted routine todo', error);
           }
           routine.missedCounter = (routine.missedCounter || 0) + 1;
         }
-        routine.totolCounter = (routine.totolCounter || 0) + 1;
         try {
+          routine.totolCounter = (routine.totolCounter || 0) + 1;
+          console.log('saving', routine);
           await routine.save();
+          console.log('saved routine', routine);
         } catch (error) {
           console.log('error while updating routine', error);
         }
-        console.log("updated routine", routine);
         // creating todo
         const newTodo = new Todo({
           userId: routine.userId,
@@ -164,7 +165,13 @@ cron.schedule('0 0 * * *', async () => {
           missed: false,
           comments: [],
         });
-        await newTodo.save();
+        try {
+          console.log('creating todo for', routine);
+          await newTodo.save();
+          console.log('created');
+        } catch (error) {
+          console.log('error while creating routine todo', error);
+        }
       }
   }
 }, {
