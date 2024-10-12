@@ -135,16 +135,25 @@ cron.schedule('0 0 * * *', async () => {
       if(isEligibleToCreateTodo) {
         console.log("routine is eligible for todo creation", routine);
         // existing todo which is created from routine && not completed && not archived
-        const existingInCompletedRoutineTodo = await Todo.findOne({ userId: routine.userId, name: routine.name, routine: true, completed: false, archived: false });
+        let existingInCompletedRoutineTodo = await Todo.findOne({ userId: routine.userId, name: routine.name, routine: true, completed: false, archived: false, missed: false });
         if(existingInCompletedRoutineTodo) {
           console.log("existing imcompleted routine todo", existingInCompletedRoutineTodo);
-          existingInCompletedRoutineTodo.missed = true;
-          await existingInCompletedRoutineTodo.save();
+          try {
+            existingInCompletedRoutineTodo.missed = true;
+            existingInCompletedRoutineTodo = await existingInCompletedRoutineTodo.save();
+            console.log("existing imcompleted routine todo marked missed", existingInCompletedRoutineTodo);
+          } catch(error) {
+            console.log('error while marking missed', error);
+          }
           routine.missedCounter = (routine.missedCounter || 0) + 1;
         }
         routine.totolCounter = (routine.totolCounter || 0) + 1;
-        await routine.save();
-        console.log("updated routine counters", routine);
+        try {
+          await routine.save();
+        } catch (error) {
+          console.log('error while updating routine', error);
+        }
+        console.log("updated routine", routine);
         // creating todo
         const newTodo = new Todo({
           userId: routine.userId,

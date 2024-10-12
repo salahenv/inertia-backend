@@ -10,6 +10,7 @@ const commentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    default: [],
 }, { timestamps: true });
 
 const todoSchema = new mongoose.Schema({
@@ -24,16 +25,19 @@ const todoSchema = new mongoose.Schema({
     },
     completed: {
         type: Boolean,
-        required: true
+        default: false,
     },
     archived: {
         type: Boolean,
+        default: false,
     },
     routine: {
         type: Boolean,
+        default: false,
     },
     missed: {
         type: Boolean,
+        default: false,
     },
     comments: [commentSchema]
 }, { timestamps: true });
