@@ -93,11 +93,19 @@ router.get("/", async (req, res) => {
   try {
     let routines = await RoutineTodo.find({ userId: new mongoose.Types.ObjectId(user.id) });
     let activeRoutines = routines.filter(routine => routine.isActive);
+    let activeRoutinesDaily = activeRoutines.filter(routine => routine.repeatMode.toLocaleLowerCase() === 'daily');
+    let activeRoutinesWeekly = activeRoutines.filter(routine => routine.repeatMode.toLocaleLowerCase() === 'weekly');
+    let activeRoutinesMontly = activeRoutines.filter(routine => routine.repeatMode.toLocaleLowerCase() === 'monthly');
     let nonActiveRoutines = routines.filter(routine => !routine.isActive);
     return res.status(200).send({
       success: true,
       message: "routines fetched successfully",
-      data: {todos: [...activeRoutines, ...nonActiveRoutines]},
+      data: {todos: [
+        ...activeRoutinesDaily,
+        ...activeRoutinesWeekly, 
+        ...activeRoutinesMontly, 
+        ...nonActiveRoutines
+      ]},
     });
   } catch (error) {
     return res.status(500).send({
