@@ -149,11 +149,13 @@ cron.schedule('0 0 * * *', async () => {
         if(existingInCompletedRoutineTodo) {
           console.log("existing imcompleted routine todo", existingInCompletedRoutineTodo);
           try {
-            console.log('deleting...', existingInCompletedRoutineTodo);
-            await Todo.deleteOne({ _id: existingInCompletedRoutineTodo._id });
-            console.log('deleted', existingInCompletedRoutineTodo);
+            // await Todo.deleteOne({ _id: existingInCompletedRoutineTodo._id });
+            console.log('marking missed...', existingInCompletedRoutineTodo);
+            existingInCompletedRoutineTodo.missed = true;
+            await existingInCompletedRoutineTodo.save();
+            console.log('marked missed', existingInCompletedRoutineTodo);
           } catch(error) {
-            console.log('error while deleting existing imcompleted routine todo', error);
+            console.log('error while marking missed existing imcompleted routine todo', error);
           }
           routine.missedCounter = (routine.missedCounter || 0) + 1;
         }
