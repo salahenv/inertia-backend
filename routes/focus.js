@@ -34,7 +34,7 @@ router.get("/", async (req, res) => {
       } else {
         // Past weeks: Monday to Saturday
         endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 5); // Saturday
+        endDate.setDate(startDate.getDate() + 6); // Saturday
         endDate.setHours(23, 59, 59, 999);
       }
 
