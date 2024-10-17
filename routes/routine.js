@@ -35,12 +35,12 @@ router.post("/create", async (req, res) => {
 
 router.patch("/update/:id", async (req, res) => {
     const { id } = req.params;
-    const { isActive = false } = req.body;
+    const updates = req.body;
     try {
       const routine = await RoutineTodo.findByIdAndUpdate(
         new mongoose.Types.ObjectId(id),
         {
-          isActive: isActive
+          $set: updates
         },
         { new: true, runValidators: true }
       );
