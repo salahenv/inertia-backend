@@ -62,7 +62,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:todoId", async (req, res) => {
+router.get("/details/:todoId", async (req, res) => {
   const { todoId } = req.params;
   try {
     let todo = await Todo.findOne({
