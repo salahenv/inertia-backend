@@ -306,7 +306,7 @@ router.get("/:todoId/comments", async (req, res) => {
   const { todoId } = req.params;
 
   try {
-    const todo = await Todo.findById(new mongoose.Types.ObjectId(todoId)).populate('comments.userId', 'name email'); // Populate user details for comments
+    const todo = await Todo.findById(new mongoose.Types.ObjectId(todoId));
 
     if (!todo) {
       return res.status(404).send({
