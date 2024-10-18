@@ -62,6 +62,35 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/:todoId", async (req, res) => {
+  const { todoId } = req.params;
+  try {
+    let todo = await Todo.findOne({
+      _id: new mongoose.Types.ObjectId(todoId), 
+    });    
+    if (todo) {
+      return res.status(200).send({
+        success: true,
+        message: "",
+        data: {
+          todo
+        },
+      });
+    }
+    return res
+      .status(200)
+      .send({ success: true, message: "no todo found", data: { todo: {} } });
+  } catch (err) {
+    return res
+      .status(500)
+      .send({
+        success: false,
+        message: "something went wrong. Please try later",
+        error: err,
+      });
+  }
+});
+
 router.get("/completed", async (req, res) => {
   const user = req.user;
   const dayOffset = parseInt(req.query.dayOffset) || 1;
@@ -103,6 +132,7 @@ router.get("/completed", async (req, res) => {
     });
   }
 });
+
 router.get("/archived", async (req, res) => {
   const user = req.user;
   const { page = 1, limit = 10 } = req.query; // Default page = 1 and limit = 10
@@ -298,7 +328,5 @@ router.get("/:todoId/comments", async (req, res) => {
     });
   }
 });
-
-
 
 module.exports = router;
