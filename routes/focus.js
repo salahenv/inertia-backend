@@ -77,7 +77,7 @@ router.get("/", async (req, res) => {
         $gte: startDateUTC,
         $lt: endDateUTC,
       },
-    });
+    }).sort({ createdAt: -1 });
 
     if (focus.length) {
       return res.status(200).send({
