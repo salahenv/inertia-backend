@@ -116,57 +116,54 @@ router.get("/", async (req, res) => {
   }
 });
 
-cron.schedule('0 0 * * *', async () => {
-  console.log("cron job started");
+const isRoutineEligibleForTodoCreation = (routine) => {
+  const {
+    repeatMode,
+    repeatOnEvery,
+    isActive,
+  } = routine;
+
+  let shouldCreateTodo = false;
+
   const today = new Date();
   const dayOfWeek = today.toLocaleString('en-US', { weekday: 'short', timeZone: 'Asia/Kolkata' }).toLowerCase();
   const dayOfMonth = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getDate();
-  
+
+  if (repeatMode === 'daily') {
+    shouldCreateTodo = true;
+  } else if (repeatMode === 'weekly') {
+    shouldCreateTodo = Array.isArray(repeatOnEvery) 
+      ? repeatOnEvery.includes(dayOfWeek) 
+      : repeatOnEvery === dayOfWeek;
+  } else if (routine.repeatMode === 'monthly') {
+    shouldCreateTodo = Array.isArray(routine.repeatOnEvery) 
+      ? routine.repeatOnEvery.includes(dayOfMonth.toString()) 
+      : routine.repeatOnEvery === dayOfMonth.toString();
+  }
+  return shouldCreateTodo && isActive;
+}
+
+cron.schedule('0 0 * * *', async () => {
   const routineTodos = await RoutineTodo.find();
-
   for (const routine of routineTodos) {
-      let shouldCreateTodo = false;
-
-      // Check if a todo should be created based on repeatMode
-      if (routine.repeatMode === 'daily') {
-          shouldCreateTodo = true;
-      } else if (routine.repeatMode === 'weekly') {
-          shouldCreateTodo = Array.isArray(routine.repeatOnEvery) 
-              ? routine.repeatOnEvery.includes(dayOfWeek) 
-              : routine.repeatOnEvery === dayOfWeek;
-      } else if (routine.repeatMode === 'monthly') {
-          shouldCreateTodo = Array.isArray(routine.repeatOnEvery) 
-              ? routine.repeatOnEvery.includes(dayOfMonth.toString()) 
-              : routine.repeatOnEvery === dayOfMonth.toString();
-      }
-
-      const isEligibleToCreateTodo = shouldCreateTodo && routine.isActive;
-      
+      let isEligibleToCreateTodo = isRoutineEligibleForTodoCreation(routine);
       if(isEligibleToCreateTodo) {
-        console.log("routine is eligible for todo creation", routine.name);
-        // existing todo which is created from routine && not completed && not archived
-        let existingInCompletedRoutineTodo = await Todo.findOne({ userId: routine.userId, name: routine.name, routine: true, completed: false, archived: false, missed: false });
+        let existingInCompletedRoutineTodo = null;
+        try {
+          existingInCompletedRoutineTodo = await Todo.findOne({ userId: routine.userId, name: routine.name, routine: true, completed: false, archived: false });
+        } catch (error) {
+          console.log('error while finding exisitng in completed todo');
+        }
+
         if(existingInCompletedRoutineTodo) {
-          console.log("existing imcompleted routine todo", existingInCompletedRoutineTodo);
           try {
-            // await Todo.deleteOne({ _id: existingInCompletedRoutineTodo._id });
-            console.log('marking missed...', existingInCompletedRoutineTodo);
             existingInCompletedRoutineTodo.missed = true;
             await existingInCompletedRoutineTodo.save();
-            console.log('marked missed', existingInCompletedRoutineTodo);
-          } catch(error) {
-            console.log('error while marking missed existing imcompleted routine todo', error);
+          } catch (error) {
+            console.log('error while marking exisitng incompleted todo missed');
           }
-          routine.missedCounter = (routine.missedCounter || 0) + 1;
         }
-        try {
-          routine.totolCounter = (routine.totolCounter || 0) + 1;
-          console.log('saving routine', routine.name);
-          await routine.save();
-          console.log('saved routine', routine.name);
-        } catch (error) {
-          console.log('error while updating routine', error);
-        }
+
         // creating todo
         const newTodo = new Todo({
           userId: routine.userId,
@@ -176,11 +173,19 @@ cron.schedule('0 0 * * *', async () => {
           routine: true,
           missed: false,
           comments: [],
+          routineId: routine._id,
         });
         try {
-          console.log('creating todo for', routine.name);
           await newTodo.save();
-          console.log('created todo for', routine.name);
+          try {
+            if(existingInCompletedRoutineTodo) {
+              routine.missedCounter = (routine.missedCounter || 0) + 1
+            }
+            routine.totolCounter = (routine.totolCounter || 0) + 1;
+            routine.save();
+          } catch (error) {
+            console.log('error while updating routine');
+          }
         } catch (error) {
           console.log('error while creating routine todo', error);
         }

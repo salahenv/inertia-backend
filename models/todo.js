@@ -31,8 +31,12 @@ const todoSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    routineId: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null,
+    },
     routine: {
-        type: Boolean,
+        type: String,
         default: false,
     },
     missed: {
