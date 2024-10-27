@@ -182,7 +182,7 @@ cron.schedule('0 0 * * *', async () => {
               routine.missedCounter = (routine.missedCounter || 0) + 1
             }
             routine.totolCounter = (routine.totolCounter || 0) + 1;
-            routine.save();
+            await routine.save();
           } catch (error) {
             console.log('error while updating routine');
           }
