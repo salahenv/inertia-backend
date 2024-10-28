@@ -36,7 +36,7 @@ const todoSchema = new mongoose.Schema({
         default: null,
     },
     routine: {
-        type: String,
+        type: Boolean,
         default: false,
     },
     missed: {
