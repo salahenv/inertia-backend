@@ -150,7 +150,7 @@ cron.schedule('0 0 * * *', async () => {
       if(isEligibleToCreateTodo) {
         let existingInCompletedRoutineTodo = null;
         try {
-          existingInCompletedRoutineTodo = await Todo.findOne({ userId: routine.userId, name: routine.name, routine: true, completed: false, archived: false });
+          existingInCompletedRoutineTodo = await Todo.findOne({ userId: routine.userId, routineId: routine._id });
         } catch (error) {
           console.log('error while finding exisitng in completed todo');
         }
