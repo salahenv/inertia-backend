@@ -150,18 +150,28 @@ cron.schedule('0 0 * * *', async () => {
       if(isEligibleToCreateTodo) {
         let existingInCompletedRoutineTodo = null;
         try {
-          existingInCompletedRoutineTodo = await Todo.findOne({ userId: routine.userId, routineId: routine._id });
-        } catch (error) {
-          console.log('error while finding exisitng in completed todo');
-        }
+          // existingInCompletedRoutineTodo = await Todo.findOne({ 
+          //   userId: routine.userId, 
+          //   routineId: routine._id, 
+          //   completed: false, 
+          //   archived: false 
+          // });
 
-        if(existingInCompletedRoutineTodo) {
-          try {
-            existingInCompletedRoutineTodo.missed = true;
-            await existingInCompletedRoutineTodo.save();
-          } catch (error) {
-            console.log('error while marking exisitng incompleted todo missed');
-          }
+          const result = await Todo.updateMany(
+            {
+              userId: routine.userId,
+              routineId: routine._id,
+              routine: true,
+              completed: false,
+              $or: [{ archived: false }, { archived: { $exists: false } }]
+            },
+            {
+              $set: { missed: true }
+            }
+          );
+          console.log(`${result.modifiedCount} todos marked as missed.`);
+        } catch (error) {
+          console.error("Error updating incompleted todos:", error);
         }
 
         // creating todo
